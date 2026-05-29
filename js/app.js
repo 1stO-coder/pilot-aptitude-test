@@ -100,6 +100,7 @@ function playSound(type) {
             break;
             
         case 'timer':
+            return; // Disabled timer ticking sound completely
             osc.frequency.value = 880;
             osc.type = 'sine';
             gain.gain.setValueAtTime(0.04, now);

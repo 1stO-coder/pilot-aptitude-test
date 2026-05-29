@@ -478,7 +478,6 @@ const CubeRotationEngine = (function() {
             window.playSound('correct');
             correctAttempts++;
             score += 10;
-            window.showToast("CORRECT");
             btnEl.classList.add('correct');
             // Auto advance
             setTimeout(() => {
