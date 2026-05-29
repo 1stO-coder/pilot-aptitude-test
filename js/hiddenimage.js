@@ -82,12 +82,14 @@ const HiddenImageEngine = (function() {
     }
 
     function getDrawingScale() {
-        let optionCanvasDim = 120; // fallback default
-        const firstOptionCanv = document.querySelector('[id^="hidden-opt-canvas-"]');
-        if (firstOptionCanv) {
-            const rect = firstOptionCanv.parentNode.getBoundingClientRect();
+        let optionCanvasDim = 120;
+        const grid = document.getElementById('hiddenimage-options-grid');
+        if (grid) {
+            const rect = grid.getBoundingClientRect();
             if (rect.width > 0) {
-                optionCanvasDim = Math.min(rect.width, rect.height);
+                let cellW = (rect.width - 15) / 2;
+                let cellH = (rect.height - 15) / 2;
+                optionCanvasDim = Math.min(cellW, cellH);
             }
         }
         
@@ -98,7 +100,7 @@ const HiddenImageEngine = (function() {
                 if (r > maxRadius) maxRadius = r;
             });
         });
-        return (optionCanvasDim * 0.36) / maxRadius;
+        return (optionCanvasDim * 0.42) / maxRadius; // Larger, 1:1 scale
     }
 
     // --- Image / Noise Generation ---

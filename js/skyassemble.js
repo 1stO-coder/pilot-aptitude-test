@@ -217,36 +217,58 @@ const SkyAssembleEngine = (function() {
         return { w: rect.width, h: rect.height };
     }
 
-    function getDrawingScale() {
-        let optionCanvasDim = 120; // fallback default
-        const firstOptionCanv = document.querySelector('[id^="sky-opt-canvas-"]');
-        if (firstOptionCanv) {
-            const rect = firstOptionCanv.parentNode.getBoundingClientRect();
-            if (rect.width > 0) {
-                optionCanvasDim = Math.min(rect.width, rect.height);
+    function getDrawingScale(mainDims, optDims) {
+        let maxRadiusMain = 1;
+        let maxRadiusOpt = 1;
+        
+        const activeMode = gameData.mode;
+        
+        if (activeMode === 'assemble') {
+            // Main canvas draws packed frags
+            if (gameData.missionPacked) {
+                gameData.missionPacked.forEach(f => {
+                    f.pts.forEach(p => {
+                        let r = Math.hypot(f.renderPos[0] + p[0], f.renderPos[1] + p[1]);
+                        if (r > maxRadiusMain) maxRadiusMain = r;
+                    });
+                });
+            }
+            // Options draw base shape
+            if (gameData.options) {
+                gameData.options.forEach(opt => {
+                    opt.base.forEach(p => {
+                        let r = Math.hypot(p[0], p[1]);
+                        if (r > maxRadiusOpt) maxRadiusOpt = r;
+                    });
+                });
+            }
+        } else {
+            // Main canvas draws base shape
+            if (gameData.baseShape) {
+                gameData.baseShape.forEach(p => {
+                    let r = Math.hypot(p[0], p[1]);
+                    if (r > maxRadiusMain) maxRadiusMain = r;
+                });
+            }
+            // Options draw packed frags
+            if (gameData.options) {
+                gameData.options.forEach(opt => {
+                    if (opt.packedFrags) {
+                        opt.packedFrags.forEach(f => {
+                            f.pts.forEach(p => {
+                                let r = Math.hypot(f.renderPos[0] + p[0], f.renderPos[1] + p[1]);
+                                if (r > maxRadiusOpt) maxRadiusOpt = r;
+                            });
+                        });
+                    }
+                });
             }
         }
         
-        let maxRadius = 1;
-        if (gameData && gameData.options) {
-            gameData.options.forEach(opt => {
-                if (opt.base) {
-                    opt.base.forEach(p => {
-                        let r = Math.hypot(p[0], p[1]);
-                        if (r > maxRadius) maxRadius = r;
-                    });
-                }
-                if (opt.packedFrags) {
-                    opt.packedFrags.forEach(f => {
-                        f.pts.forEach(p => {
-                            let r = Math.hypot(f.renderPos[0] + p[0], f.renderPos[1] + p[1]);
-                            if (r > maxRadius) maxRadius = r;
-                        });
-                    });
-                }
-            });
-        }
-        return (optionCanvasDim * 0.36) / maxRadius;
+        const scaleMain = (Math.min(mainDims.w, mainDims.h) * 0.45) / maxRadiusMain;
+        const scaleOpt = (Math.min(optDims.w, optDims.h) * 0.42) / maxRadiusOpt;
+        
+        return Math.min(scaleMain, scaleOpt);
     }
 
     function drawMission() {
@@ -258,7 +280,18 @@ const SkyAssembleEngine = (function() {
         
         const showLines = linesToggle.querySelector('input').checked;
         const activeMode = gameData.mode;
-        const scale = getDrawingScale();
+
+        let optDims = { w: 120, h: 120 };
+        const grid = document.getElementById('skyassemble-options-grid');
+        if (grid) {
+            const rect = grid.getBoundingClientRect();
+            if (rect.width > 0) {
+                let cellW = (rect.width - 15) / 2;
+                let cellH = (rect.height - 15) / 2;
+                optDims = { w: cellW, h: cellH };
+            }
+        }
+        const scale = getDrawingScale(dims, optDims);
 
         ctx.save();
         ctx.translate(dims.w / 2, dims.h / 2); 
@@ -390,7 +423,8 @@ const SkyAssembleEngine = (function() {
                     octx.shadowColor = "rgba(0, 242, 254, 0.3)";
                 }
 
-                const scale = getDrawingScale();
+                const mainDims = { w: canvas.parentNode.clientWidth, h: canvas.parentNode.clientHeight };
+                const scale = getDrawingScale(mainDims, dims);
 
                 if (activeMode === 'assemble') {
                     if (showLines || isHighlightedCorrect) {
