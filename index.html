@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#09090b">
+    <title>SkyTest Pan-Asia | Pilot Screening Suite</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+Thai:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+    <!-- Cockpit Sound Effects toggle / Mute -->
+    <button class="sound-toggle" id="globalSoundToggle" aria-label="Toggle Sound">🔊</button>
+
+    <!-- Main Workspace Container -->
+    <div class="workspace">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-accent">SKY</span>TEST
+                <span class="logo-sub">PAN-ASIA</span>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </button>
+                <div class="nav-section-title">Spatial & Orientation</div>
+                <button class="nav-item" data-view="skyassemble">
+                    <span class="nav-icon">🧩</span> Shapes Puzzle
+                </button>
+                <button class="nav-item" data-view="cuberotation">
+                    <span class="nav-icon">🎲</span> Cube Rotation
+                </button>
+                <button class="nav-item" data-view="shaperotation">
+                    <span class="nav-icon">🔄</span> 2D Shape Rotation
+                </button>
+                
+                <div class="nav-section-title">Attention & Memory</div>
+                <button class="nav-item" data-view="nback">
+                    <span class="nav-icon">🧠</span> Dual N-Back
+                </button>
+                <button class="nav-item" data-view="hiddenimage">
+                    <span class="nav-icon">🔍</span> Hidden Image
+                </button>
+                <button class="nav-item" data-view="similarity">
+                    <span class="nav-icon">⚖️</span> Similarity Test
+                </button>
+                
+                <div class="nav-section-title">Logical & Reasoning</div>
+                <button class="nav-item" data-view="seriesnum">
+                    <span class="nav-icon">🔢</span> Number Series
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                iPad Flight Deck Mode
+            </div>
+        </aside>
+
+        <!-- Main Display Screen -->
+        <main class="main-content">
+            
+            <!-- ══════════════ VIEW: DASHBOARD ══════════════ -->
+            <section class="content-view active" id="view-dashboard">
+                <div class="view-header">
+                    <h1>Flight Training Dashboard</h1>
+                    <p>สถิติการฝึกฝนและคะแนนวิเคราะห์ความพร้อมในด้านต่างๆ ของนักบิน</p>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="dashboard-stats-grid">
+                    <div class="stats-card glow-cyan">
+                        <div class="sc-label">จำนวนการทดสอบ (Total Sessions)</div>
+                        <div class="sc-val" id="db-total-sessions">0</div>
+                    </div>
+                    <div class="stats-card glow-green">
+                        <div class="sc-label">ความถูกต้องเฉลี่ย (Average Accuracy)</div>
+                        <div class="sc-val" id="db-avg-acc">0%</div>
+                    </div>
+                    <div class="stats-card glow-amber">
+                        <div class="sc-label">คะแนนความเสถียร (Streak Record)</div>
+                        <div class="sc-val" id="db-max-streak">0</div>
+                    </div>
+                </div>
+
+                <!-- Game Selector List -->
+                <h2 class="section-title">เลือกโมดูลการฝึกอบรม (Training Modules)</h2>
+                <div class="game-cards-grid">
+                    
+                    <div class="game-select-card" data-launch="skyassemble">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🧩</span>
+                            <span class="gsc-badge">Spatial</span>
+                        </div>
+                        <h3>Shapes Puzzle (SkyAssemble)</h3>
+                        <p>ประกอบชิ้นส่วนหรือแยกแยะรูปทรงเพื่อฝึกการรับรู้มิติทรงกลมและพื้นที่</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-skyassemble" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-skyassemble">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="cuberotation">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🎲</span>
+                            <span class="gsc-badge">Spatial</span>
+                        </div>
+                        <h3>Cube Rotation (Cube Tracking)</h3>
+                        <p>ติดตามการเคลื่อนที่ของเครื่องหมาย X บนลูกบาศก์ 3 มิติเพื่อฝึกจิตภาพมิติสัมพันธ์</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-cuberotation" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-cuberotation">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="shaperotation">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🔄</span>
+                            <span class="gsc-badge">Spatial</span>
+                        </div>
+                        <h3>2D Shape Rotation</h3>
+                        <p>เปรียบเทียบรูปภาพ 2 มิติเพื่อแยกแยะระหว่างการหมุนปกติกับการหมุนกระจกเงา</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-shaperotation" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-shaperotation">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="nback">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🧠</span>
+                            <span class="gsc-badge">Memory</span>
+                        </div>
+                        <h3>Dual N-Back Protocol</h3>
+                        <p>ฝึกความจำใช้งาน (Working Memory) โดยระลึกตำแหน่งเสียงและภาพย้อนหลัง N ลำดับ</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-nback" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-nback">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="hiddenimage">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🔍</span>
+                            <span class="gsc-badge">Attention</span>
+                        </div>
+                        <h3>Hidden Image (Shape Recognition)</h3>
+                        <p>ค้นหาและจำแนกรูปทรงเรขาคณิตอ้างอิงที่ซ่อนอยู่ในเส้นพัวพันพื้นหลัง</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-hiddenimage" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-hiddenimage">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="similarity">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">⚖️</span>
+                            <span class="gsc-badge">Attention</span>
+                        </div>
+                        <h3>Similarity Test (Matching Figures)</h3>
+                        <p>ตรวจสอบสัญลักษณ์เป้าหมายและค้นหารูปที่เหมือนกันเป๊ะจากตัวหลอกที่เพี้ยนไป</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-similarity" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-similarity">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="seriesnum">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🔢</span>
+                            <span class="gsc-badge">Logic</span>
+                        </div>
+                        <h3>Number Series Trainer</h3>
+                        <p>วิเคราะห์อนุกรมตัวเลขเพื่อหาความสัมพันธ์เชิงคณิตศาสตร์และตรรกะ</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-seriesnum" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-seriesnum">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Achievement Badges -->
+                <h2 class="section-title" style="margin-top: 30px;">เข็มเกียรติยศนักบิน (Unlocked Badges)</h2>
+                <div class="badges-grid" id="db-badges-container">
+                    <!-- Loaded dynamically via js/app.js -->
+                </div>
+
+                <!-- Recent Flight Logs -->
+                <h2 class="section-title" style="margin-top: 30px;">ประวัติการบินล่าสุด (Recent Flight Logs)</h2>
+                <div class="flight-logs-card" style="margin-top: 15px; padding: 15px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: 12px; overflow-x: auto;">
+                    <table class="flight-logs-table" style="width: 100%; border-collapse: collapse; text-align: left; font-family: var(--font-mono); font-size: 13px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: var(--accent);">
+                                <th style="padding: 8px;">วันที่ (Date)</th>
+                                <th style="padding: 8px;">แบบทดสอบ (Module)</th>
+                                <th style="padding: 8px;">โหมด (Mode)</th>
+                                <th style="padding: 8px;">ความถูกต้อง (Accuracy)</th>
+                                <th style="padding: 8px;">คะแนน (Score)</th>
+                                <th style="padding: 8px;">เวลา (Time)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-flight-logs-body">
+                            <!-- Loaded dynamically via js/app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: SKYASSEMBLE ══════════════ -->
+            <section class="content-view" id="view-skyassemble">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="skyassemble-lobby">
+                    <div class="lobby-content">
+                        <h2>🧩 Shapes Puzzle (SkyAssemble)</h2>
+                        <p class="lobby-desc">แบบทดสอบการรับรู้มิติทรงกลมและพื้นที่ โดยการประกอบชิ้นส่วนหรือแยกแยะรูปทรงเรขาคณิต</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>โหมดไม่มีเวลาจำกัด มีเส้นนำทางไกด์ไลน์ และเรียนรู้จากข้อผิดพลาดได้</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบ 20 ข้อภายใต้เวลาจำกัด เพื่อบันทึกผลงานลงบน Flight Dashboard</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ลักษณะโจทย์:</label>
+                                <select id="lobby-sky-game-mode">
+                                    <option value="assemble">โหมดประกอบ (ชิ้นส่วน ➔ เต็ม)</option>
+                                    <option value="disassemble">โหมดแยกชิ้น (เต็ม ➔ ชิ้นส่วน)</option>
+                                </select>
+                            </div>
+                            <div class="lobby-settings-item">
+                                <label>จำนวนชิ้นส่วน:</label>
+                                <select id="lobby-sky-piece-count">
+                                    <option value="2">2 ชิ้น (Starter)</option>
+                                    <option value="3">3 ชิ้น (Beginner)</option>
+                                    <option value="4" selected>4 ชิ้น (Intermediate)</option>
+                                    <option value="5">5 ชิ้น (Advanced)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="skyassemble-start-lobby">เริ่มทำภารกิจ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="skyassemble-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Shapes Puzzle</h2>
+                            <span class="mode-tag" id="skyassemble-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="sky-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="sky-streak">0</span><span class="gs-label">Streak</span></div>
+                            <div class="g-stat"><span class="gs-val" id="sky-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="sky-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="sky-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="skyassemble-quiz-navigator" style="display:none;"></div>
+                    
+                    <div class="game-play-area">
+                        <div id="skyassemble-review-banner" class="review-banner" style="display:none;">
+                            <span>⬅ อยู่ในโหมดดูเฉลย (Exit Review)</span>
+                        </div>
+                        <div class="split-view">
+                            <div class="canvas-container main-canvas-card">
+                                <div class="canvas-label" id="sky-mission-label">โจทย์ (MISSION)</div>
+                                <canvas id="skyassemble-mission-canvas"></canvas>
+                            </div>
+                            <div class="options-container flex-options">
+                                <div class="options-grid-4" id="skyassemble-options-grid">
+                                    <!-- Option cards dynamically generated -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="sky-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="sky-game-mode">
+                                <option value="assemble">โหมดประกอบ (ชิ้นส่วน ➔ เต็ม)</option>
+                                <option value="disassemble">โหมดแยกชิ้น (เต็ม ➔ ชิ้นส่วน)</option>
+                            </select>
+                            <select id="sky-piece-count">
+                                <option value="2">2 ชิ้น (Starter)</option>
+                                <option value="3">3 ชิ้น (Beginner)</option>
+                                <option value="4" selected>4 ชิ้น (Intermediate)</option>
+                                <option value="5">5 ชิ้น (Advanced)</option>
+                            </select>
+                            <label class="toggle-control" id="sky-lines-toggle">
+                                <input type="checkbox" id="sky-show-lines">
+                                <span>แสดงเส้นไกด์</span>
+                            </label>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="sky-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="sky-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="sky-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: CUBEROTATION ══════════════ -->
+            <section class="content-view" id="view-cuberotation">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="cuberotation-lobby">
+                    <div class="lobby-content">
+                        <h2>🎲 Cube Rotation Test (Cube Tracking)</h2>
+                        <p class="lobby-desc">แบบทดสอบการติดตามการเคลื่อนที่ของตัวเครื่องหมาย X บนหน้าลูกบาศก์ 3 มิติ เพื่อวัดทักษะมิติสัมพันธ์เชิงลึก</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ฝึกซ้อมไม่มีเวลาจำกัด สามารถเล่นทบทวนแนวทางการหมุนแบบทีละสเต็ปได้</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบ 20 ข้อภายใต้ความเร็วสูงสุดเพื่อจำลองการสอบจริงและวิเคราะห์คะแนน</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ระดับความยาก (จำนวนรอบหมุน):</label>
+                                <select id="lobby-cube-difficulty">
+                                    <option value="easy" selected>ระดับง่าย (3 รอบหมุน)</option>
+                                    <option value="medium">ระดับกลาง (5 รอบหมุน)</option>
+                                    <option value="hard">ระดับยาก (7 รอบหมุน)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="cuberotation-start-lobby">เริ่มทำภารกิจ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="cuberotation-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Cube Rotation Test</h2>
+                            <span class="mode-tag" id="cube-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="cube-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="cube-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="cube-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="cube-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="cuberotation-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <div class="cube-view-split">
+                            <div class="cube-main-card">
+                                <div class="command-overlay" id="cube-command-display">READY</div>
+                                <canvas id="cuberotation-canvas"></canvas>
+                            </div>
+                            <div class="cube-controls-card">
+                                <div class="cube-status-msg" id="cube-status-msg">
+                                    สังเกตตำแหน่งเครื่องหมาย X บนลูกบาศก์ กดเริ่มเพื่อเล่นการเคลื่อนไหว
+                                </div>
+                                <!-- Face selection choices shown at the end -->
+                                <div class="cube-choices-grid" id="cube-choices-container" style="display: none;">
+                                    <button class="btn-cube-choice" data-face="TOP">บน (TOP)</button>
+                                    <button class="btn-cube-choice" data-face="BOTTOM">ล่าง (BOTTOM)</button>
+                                    <button class="btn-cube-choice" data-face="LEFT">ซ้าย (LEFT)</button>
+                                    <button class="btn-cube-choice" data-face="RIGHT">ขวา (RIGHT)</button>
+                                    <button class="btn-cube-choice" data-face="FRONT">หน้า (FRONT)</button>
+                                    <button class="btn-cube-choice" data-face="BACK">หลัง (BACK)</button>
+                                </div>
+                                
+                                <div class="cube-action-center">
+                                    <button class="btn-action primary" id="cube-start-btn" style="width: 100%; height: 50px;">เริ่มรอบใหม่ (START)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="cube-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="cube-difficulty">
+                                <option value="easy" selected>ระดับง่าย (3 รอบหมุน)</option>
+                                <option value="medium">ระดับกลาง (5 รอบหมุน)</option>
+                                <option value="hard">ระดับยาก (7 รอบหมุน)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="cube-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="cube-next-btn" style="display:none;">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="cube-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: SHAPEROTATION ══════════════ -->
+            <section class="content-view" id="view-shaperotation">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="shaperotation-lobby">
+                    <div class="lobby-content">
+                        <h2>🔄 2D Shape Rotation</h2>
+                        <p class="lobby-desc">ประเมินความเร็วในการคิดเชิงพื้นที่ การหมุนภาพในใจแบบ 2 มิติ และแยกแยะรูปทรงปกติกับการสะท้อนเงา</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ฝึกซ้อมไม่มีเวลาจำกัด มีการแสดงผลองศาและแกนเพื่อเรียนรู้แนวทางคำนวณในใจ</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบ 20 ข้อเพื่อประเมินความเร็วและความแม่นยำในการหมุนวัตถุ 2 มิติ</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>จำนวนเหลี่ยมของรูปทรง (ความซับซ้อน):</label>
+                                <select id="lobby-shape-difficulty">
+                                    <option value="5" selected>รูปทรงเหลี่ยมปานกลาง (5 เหลี่ยม)</option>
+                                    <option value="7">รูปทรงเหลี่ยมยาก (7 เหลี่ยม)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="shaperotation-start-lobby">เริ่มทำภารกิจ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="shaperotation-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>2D Shape Rotation</h2>
+                            <span class="mode-tag" id="shape-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="shape-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="shape-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="shape-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="shape-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="shaperotation-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <div class="split-view">
+                            <div class="canvas-container main-canvas-card">
+                                <div class="canvas-label">รูปภาพโจทย์อ้างอิง (REFERENCE)</div>
+                                <canvas id="shaperotation-ref-canvas"></canvas>
+                            </div>
+                            <div class="options-container">
+                                <div class="shaperotation-desc">
+                                    จงเลือกรูปทางขวาที่เป็น **รูปโจทย์หมุนทำมุม** เท่านั้น (ห้ามเป็นรูปกระจกเงา/สะท้อนกลับด้าน)
+                                </div>
+                                <div class="options-grid-4" id="shaperotation-options-grid">
+                                    <!-- 4 canvas choices will generate here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="shape-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="shape-difficulty">
+                                <option value="5" selected>รูปทรงเหลี่ยมปานกลาง (5 เหลี่ยม)</option>
+                                <option value="7">รูปทรงเหลี่ยมยาก (7 เหลี่ยม)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="shape-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="shape-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="shape-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: NBACK ══════════════ -->
+            <section class="content-view" id="view-nback">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="nback-lobby">
+                    <div class="lobby-content">
+                        <h2>🧠 Dual N-Back Protocol</h2>
+                        <p class="lobby-desc">ทดสอบระดับความจำเพื่อการใช้งาน (Working Memory) และความเร็วในการตอบสนองแบบสองมิติประสานเสียง</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมปรับตัว</h4>
+                                <p>โหมดเล่นระดับสากล ปรับระดับความยาก (N-level) ขึ้นลงอัตโนมัติตามความถูกต้อง</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>แบบทดสอบเข้มข้นจับเวลา 2 นาที เพื่อประเมินความสามารถในการคัดกรองข้อมูล</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ระดับความยากเริ่มต้น (N-Back):</label>
+                                <select id="lobby-nback-level-select">
+                                    <option value="1">1-Back (ง่ายมาก)</option>
+                                    <option value="2" selected>2-Back (ปานกลาง)</option>
+                                    <option value="3">3-Back (ยาก)</option>
+                                    <option value="4">4-Back (ระดับสูง)</option>
+                                </select>
+                            </div>
+                            <div class="lobby-settings-item">
+                                <label>ชั่วโมงการพักผ่อน (เมื่อคืน):</label>
+                                <select id="lobby-nback-sleep">
+                                    <option value="4">นอนน้อยกว่า 5 ชม. (อ่อนล้ามาก)</option>
+                                    <option value="6">นอน 5-7 ชม. (ปานกลาง)</option>
+                                    <option value="8" selected>นอน 7-9 ชม. (เพียงพอ)</option>
+                                    <option value="10">นอนมากกว่า 9 ชม. (เต็มที่)</option>
+                                </select>
+                            </div>
+                            <div class="lobby-settings-item">
+                                <label>ความตึงเครียดของระบบประสาทขณะนี้:</label>
+                                <select id="lobby-nback-stress">
+                                    <option value="1" selected>ต่ำ (Relaxed / ผ่อนคลาย)</option>
+                                    <option value="2">ปกติ (Baseline / ทั่วไป)</option>
+                                    <option value="3">ตึงเครียด (Stressed / ล้า)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bio-warning" id="nbio-warning" style="display:none; margin-top: 10px;">
+                            ⚠️ จากรายงานสภาพร่างกายของคุณ ความจุของ Working memory อาจตกลง 25-40% กรุณาใช้สมาธิสูงสุดในการสอบ
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="nback-start-lobby">เริ่มทดสอบประสาทวิทยา (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="nback-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Dual N-Back Protocol</h2>
+                            <span class="mode-tag" id="nback-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val text-cyan" id="nback-level-val">2-Back</span><span class="gs-label">Current N</span></div>
+                            <div class="g-stat"><span class="gs-val" id="nback-score">0</span><span class="gs-label">Hits</span></div>
+                            <div class="g-stat"><span class="gs-val" id="nback-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat"><span class="gs-val" id="nback-trial">0/22</span><span class="gs-label">Trial</span></div>
+                        </div>
+                    </header>
+
+                    <div class="game-play-area nback-play-area" id="nback-main-play-area" style="display:none;">
+                        <div class="nback-grid-wrapper">
+                            <div class="nback-grid">
+                                <div class="nb-cell" data-index="0"></div>
+                                <div class="nb-cell" data-index="1"></div>
+                                <div class="nb-cell" data-index="2"></div>
+                                <div class="nb-cell" data-index="3"></div>
+                                <div class="nb-cell" data-index="4"></div>
+                                <div class="nb-cell" data-index="5"></div>
+                                <div class="nb-cell" data-index="6"></div>
+                                <div class="nb-cell" data-index="7"></div>
+                                <div class="nb-cell" data-index="8"></div>
+                            </div>
+                            <div class="nback-letter" id="nback-letter-display">—</div>
+                        </div>
+                        
+                        <div class="nback-indicator-row">
+                            <div class="nb-ind" id="nb-ind-correct">CORRECT</div>
+                            <div class="nb-ind" id="nb-ind-wrong">WRONG</div>
+                            <div class="nb-ind" id="nb-ind-miss">MISS</div>
+                        </div>
+
+                        <div class="nback-response-row">
+                            <button class="btn-nback-resp" id="btn-nback-visual">
+                                <span class="nb-icon">◧</span>
+                                <span>POSITION (A)</span>
+                            </button>
+                            <button class="btn-nback-resp" id="btn-nback-audio">
+                                <span class="nb-icon">♩</span>
+                                <span>SOUND (L)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls" id="nback-controls-panel" style="display:none;">
+                        <div class="btn-group">
+                            <select id="nback-run-mode">
+                                <option value="practice" selected>ฝึกซ้อมระดับปรับตัว (Adaptive Play)</option>
+                                <option value="challenge">แบบทดสอบจับเวลา 2 นาที (Challenge)</option>
+                            </select>
+                            <select id="nback-level-select">
+                                <option value="1">1-Back (ง่ายมาก)</option>
+                                <option value="2" selected>2-Back (ปานกลาง)</option>
+                                <option value="3">3-Back (ยาก)</option>
+                                <option value="4">4-Back (ระดับสูง)</option>
+                            </select>
+                        </div>
+                        <button class="btn-action danger" id="nback-stop-btn">หยุดเกม</button>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: HIDDENIMAGE ══════════════ -->
+            <section class="content-view" id="view-hiddenimage">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="hiddenimage-lobby">
+                    <div class="lobby-content">
+                        <h2>🔍 Hidden Image (Shape Recognition)</h2>
+                        <p class="lobby-desc">แบบทดสอบวัดการรับรู้รายละเอียดภาพ (VFF) โดยการจำแนกรูปทรงเป้าหมายอ้างอิงที่ถูกอำพรางภายใต้ลายเส้นที่หนาแน่น</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ฝึกหาภาพไม่มีเวลาจำกัด มีการเฉลยไฮไลท์รูปทรงที่ซ่อนตัวบน canvas หลังการคลิกเลือก</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำข้อสอบ 20 ข้อจำกัดเวลา 5 นาที เพื่อวัดผลความฉับไวในการมองเห็นรายละเอียดภาพ</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ความหนาแน่นเส้นพราง (ลายตา):</label>
+                                <select id="lobby-hidden-lines-density">
+                                    <option value="25">เส้นพรางน้อย (Starter - 25 เส้น)</option>
+                                    <option value="45" selected>เส้นพรางปกติ (Intermediate - 45 เส้น)</option>
+                                    <option value="70">เส้นพรางซับซ้อนพิเศษ (Advanced - 70 เส้น)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="hiddenimage-start-lobby">เริ่มค้นหา (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="hiddenimage-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Hidden Image (Shape Recognition)</h2>
+                            <span class="mode-tag" id="hidden-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="hidden-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="hidden-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="hidden-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="hidden-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="hiddenimage-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <div class="split-view">
+                            <div class="canvas-container main-canvas-card">
+                                <div class="canvas-label">ภาพซ่อนเร้นลายเส้น (COMPLEX PATTERN)</div>
+                                <canvas id="hiddenimage-canvas"></canvas>
+                            </div>
+                            <div class="options-container">
+                                <div class="hiddenimage-desc">
+                                    รูปทางซ้ายมีหนึ่งรูปด้านล่างนี้ซ่อนอยู่ ค้นหารูปที่ตรงกับลายเส้นอ้างอิงและกดเลือก
+                                </div>
+                                <div class="options-grid-4" id="hiddenimage-options-grid">
+                                    <!-- Candidates generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="hidden-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="hidden-lines-density">
+                                <option value="25">เส้นพรางน้อย (Starter - 25)</option>
+                                <option value="45" selected>เส้นพรางปานกลาง (Intermediate - 45)</option>
+                                <option value="70">เส้นพรางซับซ้อนพิเศษ (Advanced - 70)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="hidden-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="hidden-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="hidden-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: SIMILARITY ══════════════ -->
+            <section class="content-view" id="view-similarity">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="similarity-lobby">
+                    <div class="lobby-content">
+                        <h2>⚖️ Similarity Test (Matching Figures)</h2>
+                        <p class="lobby-desc">ประเมินทักษะการตรวจสอบความผิดปกติทางสายตาอย่างรวดเร็ว โดยจับคู่ภาพเหมือนจากตัวเลือกหลอกที่มีส่วนเพี้ยนเพียงนิดเดียว</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>โหมดการฝึกเปรียบเทียบข้อดีข้อเสีย มีคำใบ้จุดต่างของตัวหลอกอธิบายทันทีเมื่อตอบผิด</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>การประเมินทักษะเชิงลึก 20 ข้อจำกัดเวลาด่วน เพื่อทดสอบความถูกต้องระดับศูนย์ความบกพร่อง</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ความซับซ้อนของสัญลักษณ์ (จำนวนดีเทล):</label>
+                                <select id="lobby-sim-complexity">
+                                    <option value="easy">ความละเอียดธรรมดา (3 องค์ประกอบ)</option>
+                                    <option value="medium" selected>ความละเอียดปานกลาง (4 องค์ประกอบ)</option>
+                                    <option value="hard">ความละเอียดสูง (5 องค์ประกอบ)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="similarity-start-lobby">เริ่มจับคู่ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="similarity-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Similarity Test</h2>
+                            <span class="mode-tag" id="sim-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="sim-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="sim-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="sim-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="sim-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="similarity-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <div class="similarity-layout">
+                            <!-- Top/Left Target Card -->
+                            <div class="sim-target-wrapper">
+                                <div class="canvas-container sim-target-card">
+                                    <div class="canvas-label">รูปภาพเป้าหมาย (TARGET)</div>
+                                    <canvas id="similarity-target-canvas"></canvas>
+                                </div>
+                                <div class="similarity-tip">
+                                    เปรียบเทียบกับภาพเป้าหมาย และค้นหาตัวเลือกด้านล่างที่ **เหมือนเป้าหมายทุกประการ** โดยตัวหลอกอื่นๆ จะต่างกันเพียงองค์ประกอบเล็กๆ เท่านั้น
+                                </div>
+                            </div>
+                            
+                            <!-- Choices grid of 5 -->
+                            <div class="sim-choices-wrapper">
+                                <div class="sim-choices-grid" id="similarity-choices-grid">
+                                    <!-- 5 canvases dynamically loaded -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="sim-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="sim-complexity">
+                                <option value="easy">ความละเอียดธรรมดา (3 องค์ประกอบ)</option>
+                                <option value="medium" selected>ความละเอียดปานกลาง (4 องค์ประกอบ)</option>
+                                <option value="hard">ความละเอียดสูง (5 องค์ประกอบ)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="sim-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="sim-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="sim-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: SERIESNUM ══════════════ -->
+            <section class="content-view" id="view-seriesnum">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="seriesnum-lobby">
+                    <div class="lobby-content">
+                        <h2>🔢 Number Series Trainer</h2>
+                        <p class="lobby-desc">ฝึกฝนทักษะกระบวนการคิดเชิงตรรกะและอนุกรมตัวเลขคณิตศาสตร์ เพื่อจำลองข้อสอบเชาว์ปัญญาของทางสายการบิน</p>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ฝึกซ้อมแก้โจทย์อนุกรมทีละข้อ มีคำอธิบายสูตรความเชื่อมโยงอย่างละเอียดทันทีหลังกดส่ง</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบจำลองสอบจริง (Exam) จำนวน 20 ข้อ ภายในเวลาจำกัด 5 นาที</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ระดับความยากและรูปแบบความสัมพันธ์:</label>
+                                <select id="lobby-series-difficulty">
+                                    <option value="easy" selected>ระดับง่าย (+/- คงที่, คูณ/หาร)</option>
+                                    <option value="med">ระดับปานกลาง (รูปแบบไขว้, สลับกฎ)</option>
+                                    <option value="hard">ระดับยาก (สมการกำลังสอง, เลขคี่)</option>
+                                    <option value="vhard">ระดับยากมาก (Lucas/สูตรทริปเปิ้ล)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="seriesnum-start-lobby">เริ่มวิเคราะห์เลข (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="seriesnum-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Number Series Trainer</h2>
+                            <span class="mode-tag" id="series-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="series-score">0/20</span><span class="gs-label">Answered</span></div>
+                            <div class="g-stat"><span class="gs-val text-amber" id="series-timer">5:00</span><span class="gs-label">Time Left</span></div>
+                            <div class="g-stat"><span class="gs-val text-cyan" id="series-difficulty-val">ง่าย</span><span class="gs-label">Level</span></div>
+                        </div>
+                    </header>
+
+                    <div class="game-play-area">
+                        <div class="series-scroll-panel">
+                            <div class="series-questions-container" id="series-questions-grid">
+                                <!-- Dynamically loaded list of 20 cards in exam mode or 1 card in free play -->
+                            </div>
+                            
+                            <div class="series-submit-wrapper" id="series-submit-wrapper" style="display:none; margin: 20px 0;">
+                                <button class="btn-action primary" id="series-submit-btn" style="width: 100%; height: 50px;">ส่งกระดาษคำตอบวิเคราะห์ผลลัพธ์</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="series-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz" selected>แบบทดสอบ (Exam 20 ข้อ/5 นาที)</option>
+                            </select>
+                            <select id="series-difficulty">
+                                <option value="easy" selected>ระดับง่าย (+/- คงที่, คูณ/หาร)</option>
+                                <option value="med">ระดับปานกลาง (รูปแบบไขว้, สลับกฎ)</option>
+                                <option value="hard">ระดับยาก (สมการกำลังสอง, เลขคี่)</option>
+                                <option value="vhard">ระดับยากมาก (Lucas/สูตรทริปเปิ้ล)</option>
+                            </select>
+                        </div>
+                        <button class="btn-action primary" id="series-next-btn" style="display:none;">ข้อถัดไป</button>
+                    </footer>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ══════════════ MODAL: MISSION OVERLAY (QUIZ RESULT) ══════════════ -->
+    <div class="modal-overlay" id="quiz-result-modal">
+        <div class="modal-window">
+            <div class="modal-header-visual">
+                <span class="m-emoji" id="res-modal-emoji">🎉</span>
+                <h2 id="res-modal-title">MISSION COMPLETE</h2>
+                <p id="res-modal-sub">สรุปรายงานผลการประเมินทักษะนักบิน</p>
+            </div>
+            
+            <div class="modal-stats-dashboard">
+                <div class="ms-box glow-cyan">
+                    <span class="ms-val" id="res-modal-score">0/20</span>
+                    <span class="ms-label">คะแนนสอบ</span>
+                </div>
+                <div class="ms-box glow-green">
+                    <span class="ms-val" id="res-modal-accuracy">0%</span>
+                    <span class="ms-label">ความถูกต้อง</span>
+                </div>
+                <div class="ms-box glow-amber">
+                    <span class="ms-val" id="res-modal-time">00:00</span>
+                    <span class="ms-label">เวลาที่ใช้</span>
+                </div>
+            </div>
+
+            <!-- Review table of questions -->
+            <div class="modal-table-container">
+                <table class="res-table">
+                    <thead>
+                        <tr>
+                            <th>ข้อ</th>
+                            <th>ประเภทโจทย์</th>
+                            <th>เวลาที่ใช้</th>
+                            <th>ผลทดสอบ</th>
+                            <th>ตรวจคำตอบ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="res-modal-table-body">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-action" id="res-modal-btn-home">กลับหน้าหลัก Dashboard</button>
+                <button class="btn-action primary" id="res-modal-btn-retry">เริ่มแบบทดสอบอีกครั้ง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Popup Notifications (e.g. Correct/Wrong flash) -->
+    <div class="feedback-toast" id="feedback-toast">CORRECT</div>
+
+    <!-- Engine Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/skyassemble.js"></script>
+    <script src="js/nback.js"></script>
+    <script src="js/seriesnum.js"></script>
+    <script src="js/cuberotation.js"></script>
+    <script src="js/hiddenimage.js"></script>
+    <script src="js/shaperotation.js"></script>
+    <script src="js/similarity.js"></script>
+</body>
+</html>
