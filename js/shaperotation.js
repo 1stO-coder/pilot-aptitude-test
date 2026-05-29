@@ -11,6 +11,7 @@ const ShapeRotationEngine = (function() {
     let questionStartTime = 0;
     
     let basePolygon = []; // Original reference shape points
+    let baseMarkers = []; // Original markers inside base shape
     let correctOptionIndex = 0;
     let optionsList = [];  // Array of { pts: [], isCorrect: false }
     let userPracticeAnswer = null;
@@ -230,6 +231,95 @@ const ShapeRotationEngine = (function() {
         return pts.map(p => [-p[0], p[1]]);
     }
 
+    function generateBaseMarkers() {
+        const markers = [];
+        const types = ['circle', 'square', 'cross', 'line'];
+        
+        // Select 2 random distinct types
+        const selectedTypes = shuffle(types).slice(0, 2);
+        
+        selectedTypes.forEach((type, idx) => {
+            const angle = (idx * Math.PI) + (Math.random() * Math.PI * 0.4) + Math.PI * 0.3;
+            const dist = rnd(10, 18);
+            const x = Math.cos(angle) * dist;
+            const y = Math.sin(angle) * dist;
+            
+            if (type === 'circle') {
+                markers.push({ type: 'circle', x, y, r: 3.5 });
+            } else if (type === 'square') {
+                markers.push({ type: 'square', x, y, size: 7 });
+            } else if (type === 'cross') {
+                markers.push({ type: 'cross', x, y, size: 7 });
+            } else if (type === 'line') {
+                markers.push({ type: 'line', x1: x * 0.4, y1: y * 0.4, x2: x * 1.2, y2: y * 1.2 });
+            }
+        });
+        
+        return markers;
+    }
+
+    function rotateMarkers(markers, angle) {
+        return markers.map(m => {
+            if (m.type === 'line') {
+                const p1 = rotatePolygon([[m.x1, m.y1]], angle)[0];
+                const p2 = rotatePolygon([[m.x2, m.y2]], angle)[0];
+                return { type: 'line', x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] };
+            } else {
+                const p = rotatePolygon([[m.x, m.y]], angle)[0];
+                return { ...m, x: p[0], y: p[1] };
+            }
+        });
+    }
+
+    function mirrorMarkers(markers) {
+        return markers.map(m => {
+            if (m.type === 'line') {
+                return { type: 'line', x1: -m.x1, y1: m.y1, x2: -m.x2, y2: m.y2 };
+            } else {
+                return { ...m, x: -m.x, y: m.y };
+            }
+        });
+    }
+
+    function drawMarker(cContext, m, scale, styleColor) {
+        cContext.save();
+        cContext.strokeStyle = styleColor;
+        cContext.fillStyle = styleColor;
+        cContext.lineWidth = 1.8;
+        cContext.shadowBlur = 0;
+        
+        const mx = m.x * scale;
+        const my = m.y * scale;
+        
+        if (m.type === 'circle') {
+            const r = m.r * scale * 0.5;
+            cContext.beginPath();
+            cContext.arc(mx, my, r, 0, Math.PI * 2);
+            cContext.stroke();
+            cContext.beginPath();
+            cContext.arc(mx, my, 1.5, 0, Math.PI * 2);
+            cContext.fill();
+        } else if (m.type === 'square') {
+            const sz = m.size * scale * 0.5;
+            cContext.strokeRect(mx - sz/2, my - sz/2, sz, sz);
+        } else if (m.type === 'cross') {
+            const sz = m.size * scale * 0.45;
+            cContext.beginPath();
+            cContext.moveTo(mx - sz, my);
+            cContext.lineTo(mx + sz, my);
+            cContext.moveTo(mx, my - sz);
+            cContext.lineTo(mx, my + sz);
+            cContext.stroke();
+        } else if (m.type === 'line') {
+            cContext.beginPath();
+            cContext.moveTo(m.x1 * scale, m.y1 * scale);
+            cContext.lineTo(m.x2 * scale, m.y2 * scale);
+            cContext.stroke();
+        }
+        
+        cContext.restore();
+    }
+
     // --- Canvas Rendering ---
     function setupCanvas(targetCanvas) {
         const rect = targetCanvas.parentNode.getBoundingClientRect();
@@ -286,6 +376,9 @@ const ShapeRotationEngine = (function() {
         refCtx.closePath();
         refCtx.fill();
         refCtx.stroke();
+        
+        // Draw markers
+        baseMarkers.forEach(m => drawMarker(refCtx, m, scale, "#00f2fe"));
         
         // Draw center dot
         refCtx.beginPath();
@@ -396,10 +489,16 @@ const ShapeRotationEngine = (function() {
                 octx.fill();
                 octx.stroke();
                 
+                // Draw option markers
+                const optColor = isHighlightedCorrect ? "#10b981" : (isHighlightedWrong ? "#f43f5e" : (isHighlightedSelected ? "#93c5fd" : "#00f2fe"));
+                if (opt.markers) {
+                    opt.markers.forEach(m => drawMarker(octx, m, scale, optColor));
+                }
+                
                 // Draw center dot
                 octx.beginPath();
                 octx.arc(0, 0, 2.5, 0, Math.PI * 2);
-                octx.fillStyle = isHighlightedCorrect ? "#10b981" : (isHighlightedWrong ? "#f43f5e" : (isHighlightedSelected ? "#93c5fd" : "#00f2fe"));
+                octx.fillStyle = optColor;
                 octx.fill();
                 
                 octx.restore();
@@ -418,6 +517,7 @@ const ShapeRotationEngine = (function() {
         const numVertices = parseInt(difficultySelect.value); // 5 or 7 vertices
         
         basePolygon = generateDiversePolygon(numVertices, 32);
+        baseMarkers = generateBaseMarkers();
 
         correctOptionIndex = Math.floor(Math.random() * 4);
         optionsList = [];
@@ -428,14 +528,17 @@ const ShapeRotationEngine = (function() {
                 const angle = (rnd(1, 7) * 45 * Math.PI) / 180;
                 optionsList.push({
                     pts: rotatePolygon(basePolygon, angle),
+                    markers: rotateMarkers(baseMarkers, angle),
                     isCorrect: true
                 });
             } else {
                 // Incorrect: Mirrored and then rotated
                 const angle = (rnd(0, 7) * 45 * Math.PI) / 180;
                 const mirrored = mirrorPolygon(basePolygon);
+                const mirroredMarkers = mirrorMarkers(baseMarkers);
                 optionsList.push({
                     pts: rotatePolygon(mirrored, angle),
+                    markers: rotateMarkers(mirroredMarkers, angle),
                     isCorrect: false
                 });
             }
@@ -452,6 +555,12 @@ const ShapeRotationEngine = (function() {
             updateQuizNavigator();
             drawOptions();
             window.playSound('beep');
+            // Auto advance in quiz mode
+            setTimeout(() => {
+                if (active && isQuizMode) {
+                    handleNext();
+                }
+            }, 240);
             return;
         }
 
@@ -468,10 +577,17 @@ const ShapeRotationEngine = (function() {
             score += 10;
             window.showToast("CORRECT");
             cardEl.classList.add('correct');
-            // Auto advance
+            // Auto advance with clearing highlights first (Task 5)
             setTimeout(() => {
                 if (active && isAnswered && !isQuizMode && !isReviewMode) {
-                    initGame();
+                    isAnswered = false;
+                    userPracticeAnswer = null;
+                    drawOptions(); // Clear green border first
+                    setTimeout(() => {
+                        if (active && !isQuizMode && !isReviewMode) {
+                            initGame();
+                        }
+                    }, 100);
                 }
             }, 500);
         } else {
@@ -503,6 +619,7 @@ const ShapeRotationEngine = (function() {
         const q = quizQuestions[idx];
         
         basePolygon = q.basePolygon;
+        baseMarkers = q.baseMarkers;
         optionsList = q.optionsList;
         correctOptionIndex = q.correctOptionIndex;
         
@@ -633,6 +750,7 @@ const ShapeRotationEngine = (function() {
         
         for (let i = 0; i < maxQuizQ; i++) {
             let base = generateDiversePolygon(numVertices, 32);
+            let baseM = generateBaseMarkers();
             let corrIdx = Math.floor(Math.random() * 4);
             let opts = [];
             
@@ -641,13 +759,16 @@ const ShapeRotationEngine = (function() {
                     const angle = (rnd(1, 7) * 45 * Math.PI) / 180;
                     opts.push({
                         pts: rotatePolygon(base, angle),
+                        markers: rotateMarkers(baseM, angle),
                         isCorrect: true
                     });
                 } else {
                     const angle = (rnd(0, 7) * 45 * Math.PI) / 180;
                     const mirrored = mirrorPolygon(base);
+                    const mirroredM = mirrorMarkers(baseM);
                     opts.push({
                         pts: rotatePolygon(mirrored, angle),
+                        markers: rotateMarkers(mirroredM, angle),
                         isCorrect: false
                     });
                 }
@@ -655,6 +776,7 @@ const ShapeRotationEngine = (function() {
             
             quizQuestions.push({
                 basePolygon: base,
+                baseMarkers: baseM,
                 optionsList: opts,
                 correctOptionIndex: corrIdx,
                 userAnswer: null,
@@ -708,6 +830,7 @@ const ShapeRotationEngine = (function() {
         isAnswered = true;
         
         basePolygon = item.basePolygon;
+        baseMarkers = item.baseMarkers;
         optionsList = item.optionsList;
         correctOptionIndex = item.correctOptionIndex;
         

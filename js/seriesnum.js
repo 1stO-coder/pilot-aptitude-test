@@ -337,10 +337,25 @@ const SeriesNumEngine = (function() {
                 blank.className = "series-blank correct";
                 card.classList.add('correct-card');
                 window.showToast("CORRECT");
-                // Auto advance
+                // Auto advance with clearing highlights first (Task 5)
                 setTimeout(() => {
                     if (active && q.picked !== null && runModeSelect.value !== 'quiz') {
-                        handleNext();
+                        // Clear classes & explain box
+                        blank.className = "series-blank";
+                        card.classList.remove('correct-card');
+                        explainBox.style.display = 'none';
+                        q.choices.forEach((c, idx) => {
+                            const btn = document.getElementById(`series-choice-${qi}-${idx}`);
+                            if (btn) {
+                                btn.classList.remove('disabled', 'selected', 'correct', 'wrong');
+                            }
+                        });
+                        
+                        setTimeout(() => {
+                            if (active && runModeSelect.value !== 'quiz') {
+                                handleNext();
+                            }
+                        }, 100);
                     }
                 }, 500);
             } else {

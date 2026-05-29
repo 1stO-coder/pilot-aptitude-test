@@ -332,6 +332,11 @@ const SimilarityEngine = (function() {
             updateQuizNavigator();
             drawOptions();
             window.playSound('beep');
+            setTimeout(() => {
+                if (active && isQuizMode) {
+                    handleNext();
+                }
+            }, 240);
             return;
         }
 
@@ -348,10 +353,17 @@ const SimilarityEngine = (function() {
             score += 10;
             window.showToast("CORRECT");
             cardEl.classList.add('correct');
-            // Auto advance
+            // Auto advance with clearing highlights first (Task 5)
             setTimeout(() => {
                 if (active && isAnswered && !isQuizMode && !isReviewMode) {
-                    initGame();
+                    isAnswered = false;
+                    userPracticeAnswer = null;
+                    drawOptions(); // Clear green border first
+                    setTimeout(() => {
+                        if (active && !isQuizMode && !isReviewMode) {
+                            initGame();
+                        }
+                    }, 100);
                 }
             }, 500);
         } else {

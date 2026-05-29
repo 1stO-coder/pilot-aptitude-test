@@ -130,7 +130,7 @@ const BADGES = [
     { id: 'speedrun', icon: '⚡', name: 'Speed Demon', desc: 'ทำคะแนนแบบสอบเสร็จเร็วกว่าครึ่งเวลา' },
     { id: 'hardcore_pilot', icon: '💀', name: 'Elite Pilot', desc: 'ผ่านการฝึกฝนระดับยากสุดครบ 3 ครั้ง' },
     { id: 'consistent_rank', icon: '🎖️', name: 'Consistent Cadet', desc: 'ตอบถูก 10 ข้อติดต่อกันในการฝึก' },
-    { id: 'polymath', icon: '🗺️', name: 'Polymath Aviator', desc: 'เล่นครบทั้ง 7 โมดูลการทดสอบ' }
+    { id: 'polymath', icon: '🗺️', name: 'Polymath Aviator', desc: 'เล่นครบทั้ง 6 โมดูลการทดสอบ' }
 ];
 
 function checkAchievements(newSession) {
@@ -160,7 +160,7 @@ function checkAchievements(newSession) {
     // 5. Polymath (All 7 games played)
     if (!appState.badges.includes('polymath')) {
         const uniqueGames = new Set(ss.map(s => s.gameId));
-        if (uniqueGames.size >= 7) {
+        if (uniqueGames.size >= 6) {
             newlyUnlocked.push('polymath');
         }
     }
@@ -181,7 +181,7 @@ function checkAchievements(newSession) {
 // ROUTER & NAVIGATION CONTROLLER
 // ═══════════════════════════════════════════════
 
-const GAME_IDS = ['skyassemble', 'cuberotation', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
+const GAME_IDS = ['skyassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
 let activeView = "dashboard";
 
 function switchView(target) {
@@ -212,7 +212,6 @@ function switchView(target) {
 
 function stopActiveGame(gameId) {
     if (gameId === 'skyassemble' && window.SkyAssembleEngine) window.SkyAssembleEngine.stop();
-    if (gameId === 'cuberotation' && window.CubeRotationEngine) window.CubeRotationEngine.stop();
     if (gameId === 'shaperotation' && window.ShapeRotationEngine) window.ShapeRotationEngine.stop();
     if (gameId === 'nback' && window.NBackEngine) window.NBackEngine.stop();
     if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.stop();
@@ -224,7 +223,6 @@ function startActiveGame(gameId) {
     // Slight delay to ensure canvas layouts are finalized (critical for iPad rendering!)
     setTimeout(() => {
         if (gameId === 'skyassemble' && window.SkyAssembleEngine) window.SkyAssembleEngine.start();
-        if (gameId === 'cuberotation' && window.CubeRotationEngine) window.CubeRotationEngine.start();
         if (gameId === 'shaperotation' && window.ShapeRotationEngine) window.ShapeRotationEngine.start();
         if (gameId === 'nback' && window.NBackEngine) window.NBackEngine.start();
         if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.start();
@@ -289,7 +287,6 @@ function renderDashboard() {
     // Render Flight Logs
     const GAME_NAMES = {
         'skyassemble': 'Shapes Puzzle (SkyAssemble)',
-        'cuberotation': 'Cube Rotation Test',
         'shaperotation': '2D Shape Rotation',
         'nback': 'Dual N-Back Protocol',
         'hiddenimage': 'Hidden Image Test',
@@ -299,25 +296,24 @@ function renderDashboard() {
     const logsBody = document.getElementById('db-flight-logs-body');
     if (logsBody) {
         logsBody.innerHTML = '';
-        const recentSessions = ss.slice(0, 5);
+        const recentSessions = ss.slice(0, 20);
         if (recentSessions.length === 0) {
             logsBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 15px; color: var(--text-dim);">ไม่มีบันทึกประวัติการฝึกซ้อม</td></tr>`;
         } else {
             recentSessions.forEach(s => {
                 const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
                 
                 const nameStr = GAME_NAMES[s.gameId] || s.gameId;
                 const modeLabel = s.mode === 'quiz' ? '<span style="color: #fbbf24;">Exam (Quiz)</span>' : '<span style="color: #10b981;">Free Practice</span>';
                 const timeStr = `${Math.floor(s.sec / 60)}m ${s.sec % 60}s`;
                 
                 tr.innerHTML = `
-                    <td style="padding: 10px 8px;">${s.date}</td>
-                    <td style="padding: 10px 8px; font-weight: bold; color: #fff;">${nameStr}</td>
-                    <td style="padding: 10px 8px;">${modeLabel}</td>
-                    <td style="padding: 10px 8px; color: ${s.pct >= 80 ? '#10b981' : (s.pct >= 50 ? '#93c5fd' : '#f43f5e')}; font-weight: bold;">${s.pct}%</td>
-                    <td style="padding: 10px 8px;">${s.correct}/${s.total}</td>
-                    <td style="padding: 10px 8px;">${timeStr}</td>
+                    <td>${s.date}</td>
+                    <td style="font-weight: bold; color: #fff;">${nameStr}</td>
+                    <td>${modeLabel}</td>
+                    <td style="color: ${s.pct >= 80 ? '#10b981' : (s.pct >= 50 ? '#93c5fd' : '#f43f5e')}; font-weight: bold;">${s.pct}%</td>
+                    <td>${s.correct}/${s.total}</td>
+                    <td>${timeStr}</td>
                 `;
                 logsBody.appendChild(tr);
             });
@@ -421,7 +417,6 @@ window.reviewQuestionItem = function(gameId, questionIdx) {
     document.getElementById('quiz-result-modal').classList.remove('active');
     
     if (gameId === 'skyassemble' && window.SkyAssembleEngine) window.SkyAssembleEngine.review(questionIdx);
-    if (gameId === 'cuberotation' && window.CubeRotationEngine) window.CubeRotationEngine.review(questionIdx);
     if (gameId === 'shaperotation' && window.ShapeRotationEngine) window.ShapeRotationEngine.review(questionIdx);
     if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.review(questionIdx);
     if (gameId === 'similarity' && window.SimilarityEngine) window.SimilarityEngine.review(questionIdx);
@@ -493,7 +488,6 @@ document.addEventListener('keydown', (e) => {
     }
     
     if (activeView === 'skyassemble') routeKey(window.SkyAssembleEngine, e);
-    else if (activeView === 'cuberotation') routeKey(window.CubeRotationEngine, e);
     else if (activeView === 'shaperotation') routeKey(window.ShapeRotationEngine, e);
     else if (activeView === 'hiddenimage') routeKey(window.HiddenImageEngine, e);
     else if (activeView === 'similarity') routeKey(window.SimilarityEngine, e);

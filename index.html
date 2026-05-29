@@ -35,9 +35,7 @@
                 <button class="nav-item" data-view="skyassemble">
                     <span class="nav-icon">🧩</span> Shapes Puzzle
                 </button>
-                <button class="nav-item" data-view="cuberotation">
-                    <span class="nav-icon">🎲</span> Cube Rotation
-                </button>
+
                 <button class="nav-item" data-view="shaperotation">
                     <span class="nav-icon">🔄</span> 2D Shape Rotation
                 </button>
@@ -109,21 +107,7 @@
                         </div>
                     </div>
 
-                    <div class="game-select-card" data-launch="cuberotation">
-                        <div class="gsc-header">
-                            <span class="gsc-icon">🎲</span>
-                            <span class="gsc-badge">Spatial</span>
-                        </div>
-                        <h3>Cube Rotation (Cube Tracking)</h3>
-                        <p>ติดตามการเคลื่อนที่ของเครื่องหมาย X บนลูกบาศก์ 3 มิติเพื่อฝึกจิตภาพมิติสัมพันธ์</p>
-                        <div class="gsc-progress">
-                            <div class="gsc-progress-bar" id="progress-cuberotation" style="width: 0%"></div>
-                        </div>
-                        <div class="gsc-footer">
-                            <span class="gsc-stats" id="stats-cuberotation">ไม่มีข้อมูล</span>
-                            <button class="btn-launch">LAUNCH</button>
-                        </div>
-                    </div>
+
 
                     <div class="game-select-card" data-launch="shaperotation">
                         <div class="gsc-header">
@@ -215,16 +199,16 @@
 
                 <!-- Recent Flight Logs -->
                 <h2 class="section-title" style="margin-top: 30px;">ประวัติการบินล่าสุด (Recent Flight Logs)</h2>
-                <div class="flight-logs-card" style="margin-top: 15px; padding: 15px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: 12px; overflow-x: auto;">
-                    <table class="flight-logs-table" style="width: 100%; border-collapse: collapse; text-align: left; font-family: var(--font-mono); font-size: 13px;">
+                <div class="flight-logs-card">
+                    <table class="flight-logs-table">
                         <thead>
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: var(--accent);">
-                                <th style="padding: 8px;">วันที่ (Date)</th>
-                                <th style="padding: 8px;">แบบทดสอบ (Module)</th>
-                                <th style="padding: 8px;">โหมด (Mode)</th>
-                                <th style="padding: 8px;">ความถูกต้อง (Accuracy)</th>
-                                <th style="padding: 8px;">คะแนน (Score)</th>
-                                <th style="padding: 8px;">เวลา (Time)</th>
+                            <tr>
+                                <th>วันที่ (Date)</th>
+                                <th>แบบทดสอบ (Module)</th>
+                                <th>โหมด (Mode)</th>
+                                <th>ความถูกต้อง (Accuracy)</th>
+                                <th>คะแนน (Score)</th>
+                                <th>เวลา (Time)</th>
                             </tr>
                         </thead>
                         <tbody id="db-flight-logs-body">
@@ -341,104 +325,7 @@
                 </div>
             </section>
 
-            <!-- ══════════════ VIEW: CUBEROTATION ══════════════ -->
-            <section class="content-view" id="view-cuberotation">
-                <!-- PRE-GAME LOBBY -->
-                <div class="game-lobby" id="cuberotation-lobby">
-                    <div class="lobby-content">
-                        <h2>🎲 Cube Rotation Test (Cube Tracking)</h2>
-                        <p class="lobby-desc">แบบทดสอบการติดตามการเคลื่อนที่ของตัวเครื่องหมาย X บนหน้าลูกบาศก์ 3 มิติ เพื่อวัดทักษะมิติสัมพันธ์เชิงลึก</p>
-                        
-                        <div class="lobby-modes-grid">
-                            <div class="lobby-mode-card active" data-mode="practice">
-                                <span class="mode-icon">🔋</span>
-                                <h4>ฝึกซ้อมอิสระ</h4>
-                                <p>ฝึกซ้อมไม่มีเวลาจำกัด สามารถเล่นทบทวนแนวทางการหมุนแบบทีละสเต็ปได้</p>
-                            </div>
-                            <div class="lobby-mode-card" data-mode="quiz">
-                                <span class="mode-icon">⏱️</span>
-                                <h4>แบบทดสอบจับเวลา</h4>
-                                <p>ทำแบบทดสอบ 20 ข้อภายใต้ความเร็วสูงสุดเพื่อจำลองการสอบจริงและวิเคราะห์คะแนน</p>
-                            </div>
-                        </div>
 
-                        <div class="lobby-settings-grid">
-                            <div class="lobby-settings-item">
-                                <label>ระดับความยาก (จำนวนรอบหมุน):</label>
-                                <select id="lobby-cube-difficulty">
-                                    <option value="easy" selected>ระดับง่าย (3 รอบหมุน)</option>
-                                    <option value="medium">ระดับกลาง (5 รอบหมุน)</option>
-                                    <option value="hard">ระดับยาก (7 รอบหมุน)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <button class="btn-action primary lobby-start-btn" id="cuberotation-start-lobby">เริ่มทำภารกิจ (START MISSION)</button>
-                    </div>
-                </div>
-
-                <div class="game-stage" id="cuberotation-stage" style="display:none;">
-                    <header class="game-header">
-                        <div class="game-info">
-                            <h2>Cube Rotation Test</h2>
-                            <span class="mode-tag" id="cube-mode-tag">Free Practice</span>
-                        </div>
-                        <div class="game-stats">
-                            <div class="g-stat"><span class="gs-val" id="cube-score">0</span><span class="gs-label">Score</span></div>
-                            <div class="g-stat"><span class="gs-val" id="cube-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
-                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="cube-quest">1/20</span><span class="gs-label">Quest</span></div>
-                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="cube-timer">00:00</span><span class="gs-label">Time</span></div>
-                        </div>
-                    </header>
-                    <div class="quiz-navigator" id="cuberotation-quiz-navigator" style="display:none;"></div>
-
-                    <div class="game-play-area">
-                        <div class="cube-view-split">
-                            <div class="cube-main-card">
-                                <div class="command-overlay" id="cube-command-display">READY</div>
-                                <canvas id="cuberotation-canvas"></canvas>
-                            </div>
-                            <div class="cube-controls-card">
-                                <div class="cube-status-msg" id="cube-status-msg">
-                                    สังเกตตำแหน่งเครื่องหมาย X บนลูกบาศก์ กดเริ่มเพื่อเล่นการเคลื่อนไหว
-                                </div>
-                                <!-- Face selection choices shown at the end -->
-                                <div class="cube-choices-grid" id="cube-choices-container" style="display: none;">
-                                    <button class="btn-cube-choice" data-face="TOP">บน (TOP)</button>
-                                    <button class="btn-cube-choice" data-face="BOTTOM">ล่าง (BOTTOM)</button>
-                                    <button class="btn-cube-choice" data-face="LEFT">ซ้าย (LEFT)</button>
-                                    <button class="btn-cube-choice" data-face="RIGHT">ขวา (RIGHT)</button>
-                                    <button class="btn-cube-choice" data-face="FRONT">หน้า (FRONT)</button>
-                                    <button class="btn-cube-choice" data-face="BACK">หลัง (BACK)</button>
-                                </div>
-                                
-                                <div class="cube-action-center">
-                                    <button class="btn-action primary" id="cube-start-btn" style="width: 100%; height: 50px;">เริ่มรอบใหม่ (START)</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <footer class="game-controls">
-                        <div class="btn-group">
-                            <select id="cube-run-mode">
-                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
-                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
-                            </select>
-                            <select id="cube-difficulty">
-                                <option value="easy" selected>ระดับง่าย (3 รอบหมุน)</option>
-                                <option value="medium">ระดับกลาง (5 รอบหมุน)</option>
-                                <option value="hard">ระดับยาก (7 รอบหมุน)</option>
-                            </select>
-                        </div>
-                        <div class="btn-group" style="gap: 8px;">
-                            <button class="btn-action" id="cube-prev-btn" style="display:none;">ก่อนหน้า</button>
-                            <button class="btn-action primary" id="cube-next-btn" style="display:none;">ข้ามข้อนี้</button>
-                            <button class="btn-action" id="cube-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
-                        </div>
-                    </footer>
-                </div>
-            </section>
 
             <!-- ══════════════ VIEW: SHAPEROTATION ══════════════ -->
             <section class="content-view" id="view-shaperotation">
@@ -703,7 +590,7 @@
                     <div class="quiz-navigator" id="hiddenimage-quiz-navigator" style="display:none;"></div>
 
                     <div class="game-play-area">
-                        <div class="split-view">
+                        <div class="split-view hiddenimage-split-view">
                             <div class="canvas-container main-canvas-card">
                                 <div class="canvas-label">ภาพซ่อนเร้นลายเส้น (COMPLEX PATTERN)</div>
                                 <canvas id="hiddenimage-canvas"></canvas>
@@ -974,7 +861,7 @@
     <script src="js/skyassemble.js"></script>
     <script src="js/nback.js"></script>
     <script src="js/seriesnum.js"></script>
-    <script src="js/cuberotation.js"></script>
+
     <script src="js/hiddenimage.js"></script>
     <script src="js/shaperotation.js"></script>
     <script src="js/similarity.js"></script>
