@@ -13,6 +13,7 @@ const ShapeRotationEngine = (function() {
     let basePolygon = []; // Original reference shape points
     let correctOptionIndex = 0;
     let optionsList = [];  // Array of { pts: [], isCorrect: false }
+    let userPracticeAnswer = null;
     
     // Quiz State
     let isQuizMode = false;
@@ -248,6 +249,14 @@ const ShapeRotationEngine = (function() {
         refCtx.save();
         refCtx.translate(dims.w / 2, dims.h / 2);
         
+        // Dynamic scaling
+        let maxRadius = 1;
+        basePolygon.forEach(p => {
+            let r = Math.hypot(p[0], p[1]);
+            if (r > maxRadius) maxRadius = r;
+        });
+        let scale = (Math.min(dims.w, dims.h) * 0.38) / maxRadius;
+        
         refCtx.shadowBlur = 10;
         refCtx.shadowColor = "rgba(0, 242, 254, 0.4)";
         refCtx.fillStyle = "rgba(0, 242, 254, 0.12)";
@@ -255,9 +264,9 @@ const ShapeRotationEngine = (function() {
         refCtx.lineWidth = 2.0;
         
         refCtx.beginPath();
-        refCtx.moveTo(basePolygon[0][0], basePolygon[0][1]);
+        refCtx.moveTo(basePolygon[0][0] * scale, basePolygon[0][1] * scale);
         for (let i = 1; i < basePolygon.length; i++) {
-            refCtx.lineTo(basePolygon[i][0], basePolygon[i][1]);
+            refCtx.lineTo(basePolygon[i][0] * scale, basePolygon[i][1] * scale);
         }
         refCtx.closePath();
         refCtx.fill();
@@ -292,7 +301,11 @@ const ShapeRotationEngine = (function() {
                     card.classList.add('selected-exam');
                 }
             } else if (isAnswered) {
-                if (opt.isCorrect) card.classList.add('correct');
+                if (opt.isCorrect) {
+                    card.classList.add('correct');
+                } else if (idx === userPracticeAnswer) {
+                    card.classList.add('wrong');
+                }
             }
             
             card.innerHTML = `<span class="option-num-label">${String.fromCharCode(65+idx)}</span><canvas id="shape-opt-canvas-${idx}"></canvas>`;
@@ -312,8 +325,17 @@ const ShapeRotationEngine = (function() {
                 octx.save();
                 octx.translate(dims.w / 2, dims.h / 2);
                 
+                // Dynamic scaling
+                let maxRadius = 1;
+                opt.pts.forEach(p => {
+                    let r = Math.hypot(p[0], p[1]);
+                    if (r > maxRadius) maxRadius = r;
+                });
+                let scale = (Math.min(dims.w, dims.h) * 0.38) / maxRadius;
+                
                 let isHighlightedCorrect = false;
                 let isHighlightedSelected = false;
+                let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
                     const q = quizQuestions[currentQIndex];
@@ -322,7 +344,11 @@ const ShapeRotationEngine = (function() {
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
-                    if (opt.isCorrect) isHighlightedCorrect = true;
+                    if (opt.isCorrect) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userPracticeAnswer) {
+                        isHighlightedWrong = true;
+                    }
                 }
                 
                 if (isHighlightedCorrect) {
@@ -330,6 +356,12 @@ const ShapeRotationEngine = (function() {
                     octx.shadowColor = "#10b981";
                     octx.fillStyle = "rgba(16, 185, 129, 0.15)";
                     octx.strokeStyle = "#10b981";
+                    octx.lineWidth = 2.2;
+                } else if (isHighlightedWrong) {
+                    octx.shadowBlur = 12;
+                    octx.shadowColor = "#f43f5e";
+                    octx.fillStyle = "rgba(244, 63, 94, 0.15)";
+                    octx.strokeStyle = "#f43f5e";
                     octx.lineWidth = 2.2;
                 } else if (isHighlightedSelected) {
                     octx.shadowBlur = 12;
@@ -346,9 +378,9 @@ const ShapeRotationEngine = (function() {
                 }
                 
                 octx.beginPath();
-                octx.moveTo(opt.pts[0][0], opt.pts[0][1]);
+                octx.moveTo(opt.pts[0][0] * scale, opt.pts[0][1] * scale);
                 for (let i = 1; i < opt.pts.length; i++) {
-                    octx.lineTo(opt.pts[i][0], opt.pts[i][1]);
+                    octx.lineTo(opt.pts[i][0] * scale, opt.pts[i][1] * scale);
                 }
                 octx.closePath();
                 octx.fill();
@@ -357,7 +389,7 @@ const ShapeRotationEngine = (function() {
                 // Draw center dot
                 octx.beginPath();
                 octx.arc(0, 0, 2.5, 0, Math.PI * 2);
-                octx.fillStyle = isHighlightedCorrect ? "#10b981" : (isHighlightedSelected ? "#93c5fd" : "#00f2fe");
+                octx.fillStyle = isHighlightedCorrect ? "#10b981" : (isHighlightedWrong ? "#f43f5e" : (isHighlightedSelected ? "#93c5fd" : "#00f2fe"));
                 octx.fill();
                 
                 octx.restore();
@@ -369,6 +401,7 @@ const ShapeRotationEngine = (function() {
         if (!active) return;
         
         isAnswered = false;
+        userPracticeAnswer = null;
         nextBtn.innerText = "ข้ามข้อนี้";
         nextBtn.className = "btn-action";
         
@@ -414,6 +447,7 @@ const ShapeRotationEngine = (function() {
 
         if (isAnswered) return;
         isAnswered = true;
+        userPracticeAnswer = idx;
         totalAttempts++;
         
         const isCorrect = (idx === correctOptionIndex);
@@ -697,6 +731,14 @@ const ShapeRotationEngine = (function() {
             } else if (e.key === 'Enter' && e.ctrlKey) {
                 submitQuiz();
                 e.preventDefault();
+            }
+        }
+        
+        if (isAnswered && !isQuizMode && !isReviewMode) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                handleNext();
+                e.preventDefault();
+                return;
             }
         }
         

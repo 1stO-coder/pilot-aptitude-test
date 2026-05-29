@@ -500,6 +500,31 @@ const SeriesNumEngine = (function() {
         questionsGrid.appendChild(card);
     }
 
+    function handleKeyDown(e) {
+        if (!active) return;
+        const key = e.key.toLowerCase();
+        
+        if (runModeSelect.value !== 'quiz') {
+            const q = questionsList[currentQuestionIndex];
+            if (q && q.picked === null) {
+                let idx = -1;
+                if (key === '1' || key === 'a') idx = 0;
+                else if (key === '2' || key === 'b') idx = 1;
+                else if (key === '3' || key === 'c') idx = 2;
+                else if (key === '4' || key === 'd') idx = 3;
+                
+                if (idx >= 0 && idx < q.choices.length) {
+                    pickAnswer(currentQuestionIndex, idx);
+                }
+            } else if (q && q.picked !== null) {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    handleNext();
+                    e.preventDefault();
+                }
+            }
+        }
+    }
+
     runModeSelect.addEventListener('change', startQuiz);
     difficultySelect.addEventListener('change', startQuiz);
     submitBtn.addEventListener('click', finishQuiz);
@@ -531,7 +556,8 @@ const SeriesNumEngine = (function() {
             clearInterval(quizTimerInterval);
         },
         pickAnswer,
-        review: reviewQuestion
+        review: reviewQuestion,
+        handleKeyDown: handleKeyDown
     };
 })();
 

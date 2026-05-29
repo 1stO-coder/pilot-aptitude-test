@@ -13,6 +13,7 @@ const SimilarityEngine = (function() {
     let targetSymbol = null; // Reference object
     let correctOptionIndex = 0;
     let optionsList = [];  // Array of 5 symbol objects
+    let userPracticeAnswer = null;
     
     // Quiz State
     let isQuizMode = false;
@@ -145,7 +146,7 @@ const SimilarityEngine = (function() {
         return { w: rect.width, h: rect.height };
     }
 
-    function drawSymbolToCtx(sCtx, sym, dims, isHighlighted, isSelected) {
+    function drawSymbolToCtx(sCtx, sym, dims, isHighlighted, isSelected, isWrong) {
         sCtx.clearRect(0, 0, dims.w, dims.h);
         sCtx.save();
         sCtx.translate(dims.w / 2, dims.h / 2);
@@ -155,6 +156,12 @@ const SimilarityEngine = (function() {
             sCtx.shadowColor = "#10b981";
             sCtx.strokeStyle = "#10b981";
             sCtx.fillStyle = "#10b981";
+            sCtx.lineWidth = 2.2;
+        } else if (isWrong) {
+            sCtx.shadowBlur = 10;
+            sCtx.shadowColor = "#f43f5e";
+            sCtx.strokeStyle = "#f43f5e";
+            sCtx.fillStyle = "#f43f5e";
             sCtx.lineWidth = 2.2;
         } else if (isSelected) {
             sCtx.shadowBlur = 10;
@@ -226,7 +233,7 @@ const SimilarityEngine = (function() {
     function drawTarget() {
         if (!active) return;
         const dims = setupCanvas(targetCanvas);
-        drawSymbolToCtx(targetCtx, targetSymbol, dims, false, false);
+        drawSymbolToCtx(targetCtx, targetSymbol, dims, false, false, false);
     }
 
     function drawOptions() {
@@ -248,7 +255,11 @@ const SimilarityEngine = (function() {
                     card.classList.add('selected-exam');
                 }
             } else if (isAnswered) {
-                if (idx === correctOptionIndex) card.classList.add('correct');
+                if (idx === correctOptionIndex) {
+                    card.classList.add('correct');
+                } else if (idx === userPracticeAnswer) {
+                    card.classList.add('wrong');
+                }
             }
             
             card.innerHTML = `<span class="option-num-label">${String.fromCharCode(65+idx)}</span><canvas id="sim-opt-canvas-${idx}"></canvas>`;
@@ -265,6 +276,7 @@ const SimilarityEngine = (function() {
                 
                 let isHighlightedCorrect = false;
                 let isHighlightedSelected = false;
+                let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
                     if (idx === correctOptionIndex) isHighlightedCorrect = true;
@@ -272,10 +284,14 @@ const SimilarityEngine = (function() {
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
-                    if (idx === correctOptionIndex) isHighlightedCorrect = true;
+                    if (idx === correctOptionIndex) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userPracticeAnswer) {
+                        isHighlightedWrong = true;
+                    }
                 }
                 
-                drawSymbolToCtx(octx, opt, dims, isHighlightedCorrect, isHighlightedSelected);
+                drawSymbolToCtx(octx, opt, dims, isHighlightedCorrect, isHighlightedSelected, isHighlightedWrong);
             });
         });
     }
@@ -284,6 +300,7 @@ const SimilarityEngine = (function() {
         if (!active) return;
         
         isAnswered = false;
+        userPracticeAnswer = null;
         nextBtn.innerText = "ข้ามข้อนี้";
         nextBtn.className = "btn-action";
         
@@ -320,6 +337,7 @@ const SimilarityEngine = (function() {
 
         if (isAnswered) return;
         isAnswered = true;
+        userPracticeAnswer = idx;
         totalAttempts++;
         
         const isCorrect = (idx === correctOptionIndex);
@@ -592,6 +610,14 @@ const SimilarityEngine = (function() {
             } else if (e.key === 'Enter' && e.ctrlKey) {
                 submitQuiz();
                 e.preventDefault();
+            }
+        }
+        
+        if (isAnswered && !isQuizMode && !isReviewMode) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                handleNext();
+                e.preventDefault();
+                return;
             }
         }
         

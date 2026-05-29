@@ -18,6 +18,7 @@ const HiddenImageEngine = (function() {
     let backgroundLines = [];  // Array of [p1, p2] lines forming the distractor noise
     let backgroundCircles = []; // Circular distractor noise
     let optionsList = [];      // 4 shapes candidates
+    let userPracticeAnswer = null; // Add user practice answer tracking
     
     // Quiz State
     let isQuizMode = false;
@@ -283,7 +284,11 @@ const HiddenImageEngine = (function() {
                     card.classList.add('selected-exam');
                 }
             } else if (isAnswered) {
-                if (idx === correctOptionIndex) card.classList.add('correct');
+                if (idx === correctOptionIndex) {
+                    card.classList.add('correct');
+                } else if (idx === userPracticeAnswer) {
+                    card.classList.add('wrong');
+                }
             }
             
             card.innerHTML = `<span class="option-num-label">${String.fromCharCode(65+idx)}</span><canvas id="hidden-opt-canvas-${idx}"></canvas>`;
@@ -303,8 +308,17 @@ const HiddenImageEngine = (function() {
                 octx.save();
                 octx.translate(dims.w / 2, dims.h / 2);
                 
+                // Dynamic scaling
+                let maxRadius = 1;
+                opt.pts.forEach(p => {
+                    let r = Math.hypot(p[0], p[1]);
+                    if (r > maxRadius) maxRadius = r;
+                });
+                let scale = (Math.min(dims.w, dims.h) * 0.38) / maxRadius;
+                
                 let isHighlightedCorrect = false;
                 let isHighlightedSelected = false;
+                let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
                     if (idx === correctOptionIndex) isHighlightedCorrect = true;
@@ -312,13 +326,22 @@ const HiddenImageEngine = (function() {
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
-                    if (idx === correctOptionIndex) isHighlightedCorrect = true;
+                    if (idx === correctOptionIndex) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userPracticeAnswer) {
+                        isHighlightedWrong = true;
+                    }
                 }
                 
                 if (isHighlightedCorrect) {
                     octx.shadowBlur = 10;
                     octx.shadowColor = "#10b981";
                     octx.strokeStyle = "#10b981";
+                    octx.lineWidth = 2.2;
+                } else if (isHighlightedWrong) {
+                    octx.shadowBlur = 10;
+                    octx.shadowColor = "#f43f5e";
+                    octx.strokeStyle = "#f43f5e";
                     octx.lineWidth = 2.2;
                 } else if (isHighlightedSelected) {
                     octx.shadowBlur = 10;
@@ -333,9 +356,9 @@ const HiddenImageEngine = (function() {
                 }
                 
                 octx.beginPath();
-                octx.moveTo(opt.pts[0][0], opt.pts[0][1]);
+                octx.moveTo(opt.pts[0][0] * scale, opt.pts[0][1] * scale);
                 for (let i = 1; i < opt.pts.length; i++) {
-                    octx.lineTo(opt.pts[i][0], opt.pts[i][1]);
+                    octx.lineTo(opt.pts[i][0] * scale, opt.pts[i][1] * scale);
                 }
                 octx.closePath();
                 octx.stroke();
@@ -349,6 +372,7 @@ const HiddenImageEngine = (function() {
         if (!active) return;
         
         isAnswered = false;
+        userPracticeAnswer = null;
         nextBtn.innerText = "ข้ามข้อนี้";
         nextBtn.className = "btn-action";
         
@@ -391,6 +415,7 @@ const HiddenImageEngine = (function() {
 
         if (isAnswered) return;
         isAnswered = true;
+        userPracticeAnswer = idx;
         totalAttempts++;
         
         const isCorrect = (idx === correctOptionIndex);
@@ -680,6 +705,14 @@ const HiddenImageEngine = (function() {
             } else if (e.key === 'Enter' && e.ctrlKey) {
                 submitQuiz();
                 e.preventDefault();
+            }
+        }
+        
+        if (isAnswered && !isQuizMode && !isReviewMode) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                handleNext();
+                e.preventDefault();
+                return;
             }
         }
         

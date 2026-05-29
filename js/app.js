@@ -497,6 +497,7 @@ document.addEventListener('keydown', (e) => {
     else if (activeView === 'shaperotation') routeKey(window.ShapeRotationEngine, e);
     else if (activeView === 'hiddenimage') routeKey(window.HiddenImageEngine, e);
     else if (activeView === 'similarity') routeKey(window.SimilarityEngine, e);
+    else if (activeView === 'seriesnum') routeKey(window.SeriesNumEngine, e);
 });
 
 window.onload = () => {

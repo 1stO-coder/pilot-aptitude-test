@@ -10,6 +10,7 @@ const SkyAssembleEngine = (function() {
     let totalAttempts = 0, correctAttempts = 0;
     
     let gameData = { baseShape: [], options: [], missionPacked: null, correctIndex: 0, mode: 'assemble' };
+    let userPracticeAnswer = null; // Add user practice answer tracking
     
     // Quiz State
     let isQuizMode = false;
@@ -300,7 +301,11 @@ const SkyAssembleEngine = (function() {
                     card.classList.add('selected-exam');
                 }
             } else if (isAnswered) {
-                if (opt.isCorrect) card.classList.add('correct');
+                if (opt.isCorrect) {
+                    card.classList.add('correct');
+                } else if (idx === userPracticeAnswer) {
+                    card.classList.add('wrong');
+                }
             }
             
             card.innerHTML = `<span class="option-num-label">${String.fromCharCode(65+idx)}</span><canvas id="sky-opt-canvas-${idx}"></canvas>`;
@@ -323,6 +328,7 @@ const SkyAssembleEngine = (function() {
                 
                 let isHighlightedCorrect = false;
                 let isHighlightedSelected = false;
+                let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
                     if (opt.isCorrect) isHighlightedCorrect = true;
@@ -330,12 +336,19 @@ const SkyAssembleEngine = (function() {
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
-                    if (opt.isCorrect) isHighlightedCorrect = true;
+                    if (opt.isCorrect) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userPracticeAnswer) {
+                        isHighlightedWrong = true;
+                    }
                 }
                 
                 if (isHighlightedCorrect) {
                     octx.shadowBlur = 15;
                     octx.shadowColor = "rgba(16, 185, 129, 0.5)";
+                } else if (isHighlightedWrong) {
+                    octx.shadowBlur = 15;
+                    octx.shadowColor = "rgba(244, 63, 94, 0.5)";
                 } else if (isHighlightedSelected) {
                     octx.shadowBlur = 15;
                     octx.shadowColor = "rgba(59, 130, 246, 0.5)";
@@ -351,9 +364,9 @@ const SkyAssembleEngine = (function() {
                         opt.base.forEach(p => octx.lineTo(p[0], p[1]));
                         octx.closePath();
                         
-                        octx.fillStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.18)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.18)" : "rgba(0, 242, 254, 0.12)");
+                        octx.fillStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.18)" : (isHighlightedWrong ? "rgba(244, 63, 94, 0.18)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.18)" : "rgba(0, 242, 254, 0.12)"));
                         octx.fill();
-                        octx.strokeStyle = isHighlightedCorrect ? "#10b981" : (isHighlightedSelected ? "#3b82f6" : "#00f2fe"); 
+                        octx.strokeStyle = isHighlightedCorrect ? "#10b981" : (isHighlightedWrong ? "#f43f5e" : (isHighlightedSelected ? "#3b82f6" : "#00f2fe")); 
                         octx.lineWidth = 2.0; 
                         octx.stroke();
 
@@ -364,7 +377,7 @@ const SkyAssembleEngine = (function() {
                                 f.forEach(p => octx.lineTo(p[0], p[1]));
                                 octx.closePath();
                                 octx.setLineDash([4, 4]); 
-                                octx.strokeStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.7)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.7)" : "rgba(0, 242, 254, 0.7)"); 
+                                octx.strokeStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.7)" : (isHighlightedWrong ? "rgba(244, 63, 94, 0.7)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.7)" : "rgba(0, 242, 254, 0.7)")); 
                                 octx.lineWidth = 1.0;
                                 octx.stroke();
                                 octx.setLineDash([]);
@@ -405,6 +418,7 @@ const SkyAssembleEngine = (function() {
         if (!active || isReviewMode) return;
         
         isAnswered = false;
+        userPracticeAnswer = null;
         nextBtn.innerText = "ข้ามข้อนี้";
         nextBtn.className = "btn-action";
         
@@ -501,6 +515,7 @@ const SkyAssembleEngine = (function() {
 
         if (isAnswered || isReviewMode) return;
         isAnswered = true;
+        userPracticeAnswer = idx;
         totalAttempts++;
         
         const isCorrect = (idx === gameData.correctIndex);
@@ -661,8 +676,8 @@ const SkyAssembleEngine = (function() {
         timerVal.innerText = "00:00";
         modeTag.innerText = "Timed Challenge (Quiz)";
         
-        linesToggle.style.display = 'none';
-        linesToggle.querySelector('input').checked = false;
+        linesToggle.style.display = 'flex';
+        // Keep user's selected checked state for the guidelines
         
         // Pre-cache all 20 questions
         quizQuestions = [];
@@ -853,6 +868,14 @@ const SkyAssembleEngine = (function() {
             } else if (e.key === 'Enter' && e.ctrlKey) {
                 submitQuiz();
                 e.preventDefault();
+            }
+        }
+        
+        if (isAnswered && !isQuizMode && !isReviewMode) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                handleNext();
+                e.preventDefault();
+                return;
             }
         }
         
