@@ -100,7 +100,7 @@ const HiddenImageEngine = (function() {
                 if (r > maxRadius) maxRadius = r;
             });
         });
-        return (optionCanvasDim * 0.42) / maxRadius; // Larger, 1:1 scale
+        return (optionCanvasDim * 0.45) / maxRadius; // Larger, 1:1 scale
     }
 
     // --- Image / Noise Generation ---
@@ -446,6 +446,12 @@ const HiddenImageEngine = (function() {
             score += 10;
             window.showToast("CORRECT");
             cardEl.classList.add('correct');
+            // Auto advance
+            setTimeout(() => {
+                if (active && isAnswered && !isQuizMode && !isReviewMode) {
+                    initGame();
+                }
+            }, 500);
         } else {
             window.playSound('wrong');
             window.showToast("WRONG");
@@ -751,6 +757,18 @@ const HiddenImageEngine = (function() {
             }
         }
     }
+
+    // Resize optimization
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (active && !isReviewMode) {
+                drawMainCanvas();
+                drawOptions();
+            }
+        }, 150);
+    });
 
     return {
         start: function() {

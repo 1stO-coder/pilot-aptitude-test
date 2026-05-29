@@ -258,7 +258,7 @@ const ShapeRotationEngine = (function() {
             let r = Math.hypot(p[0], p[1]);
             if (r > maxRadius) maxRadius = r;
         });
-        return (optionCanvasDim * 0.42) / maxRadius; // Larger, 1:1 scale
+        return (optionCanvasDim * 0.45) / maxRadius; // Larger, 1:1 scale
     }
 
     function drawReference() {
@@ -468,6 +468,12 @@ const ShapeRotationEngine = (function() {
             score += 10;
             window.showToast("CORRECT");
             cardEl.classList.add('correct');
+            // Auto advance
+            setTimeout(() => {
+                if (active && isAnswered && !isQuizMode && !isReviewMode) {
+                    initGame();
+                }
+            }, 500);
         } else {
             window.playSound('wrong');
             window.showToast("WRONG");
@@ -767,6 +773,18 @@ const ShapeRotationEngine = (function() {
             }
         }
     }
+
+    // Resize optimization
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (active && !isReviewMode) {
+                drawReference();
+                drawOptions();
+            }
+        }, 150);
+    });
 
     return {
         start: function() {

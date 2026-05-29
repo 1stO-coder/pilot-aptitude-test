@@ -337,6 +337,12 @@ const SeriesNumEngine = (function() {
                 blank.className = "series-blank correct";
                 card.classList.add('correct-card');
                 window.showToast("CORRECT");
+                // Auto advance
+                setTimeout(() => {
+                    if (active && q.picked !== null && runModeSelect.value !== 'quiz') {
+                        handleNext();
+                    }
+                }, 500);
             } else {
                 window.playSound('wrong');
                 blank.className = "series-blank wrong";

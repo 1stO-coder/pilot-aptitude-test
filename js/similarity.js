@@ -348,6 +348,12 @@ const SimilarityEngine = (function() {
             score += 10;
             window.showToast("CORRECT");
             cardEl.classList.add('correct');
+            // Auto advance
+            setTimeout(() => {
+                if (active && isAnswered && !isQuizMode && !isReviewMode) {
+                    initGame();
+                }
+            }, 500);
         } else {
             window.playSound('wrong');
             window.showToast("WRONG");
@@ -637,6 +643,18 @@ const SimilarityEngine = (function() {
             }
         }
     }
+
+    // Resize optimization
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (active && !isReviewMode) {
+                drawTarget();
+                drawOptions();
+            }
+        }, 150);
+    });
 
     return {
         start: function() {

@@ -266,7 +266,7 @@ const SkyAssembleEngine = (function() {
         }
         
         const scaleMain = (Math.min(mainDims.w, mainDims.h) * 0.45) / maxRadiusMain;
-        const scaleOpt = (Math.min(optDims.w, optDims.h) * 0.42) / maxRadiusOpt;
+        const scaleOpt = (Math.min(optDims.w, optDims.h) * 0.45) / maxRadiusOpt;
         
         return Math.min(scaleMain, scaleOpt);
     }
@@ -596,6 +596,12 @@ const SkyAssembleEngine = (function() {
             streak++;
             window.showToast("CORRECT");
             cardEl.classList.add('correct');
+            // Auto advance
+            setTimeout(() => {
+                if (active && isAnswered && !isQuizMode && !isReviewMode) {
+                    initGame();
+                }
+            }, 500);
         } else {
             playSound('wrong');
             streak = 0;

@@ -253,7 +253,7 @@ const CubeRotationEngine = (function() {
                 name: faceName,
                 indices: f.indices,
                 z: zCenter,
-                visible: crossProduct > 0, // facing user
+                visible: crossProduct > -500, // facing user (with tolerance to avoid disappearing on edge-on)
                 color: f.color
             });
         }
@@ -262,6 +262,21 @@ const CubeRotationEngine = (function() {
         
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
+
+        // Draw faint wireframe for all 12 edges to maintain solid structural layout
+        const cubeEdges = [
+            [0, 1], [1, 2], [2, 3], [3, 0], // Back
+            [4, 5], [5, 6], [6, 7], [7, 4], // Front
+            [0, 4], [1, 5], [2, 6], [3, 7]  // Connectors
+        ];
+        ctx.strokeStyle = "rgba(0, 242, 254, 0.12)";
+        ctx.lineWidth = 1.0;
+        cubeEdges.forEach(edge => {
+            ctx.beginPath();
+            ctx.moveTo(projected[edge[0]].x, projected[edge[0]].y);
+            ctx.lineTo(projected[edge[1]].x, projected[edge[1]].y);
+            ctx.stroke();
+        });
         
         faceList.forEach(f => {
             if (!f.visible) return;
@@ -277,7 +292,7 @@ const CubeRotationEngine = (function() {
             const userChoice = isQuizMode && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
             
             // Show X: before animation starts (initial phase), on answer reveal, or in review
-            const isInitialPhase = !isAnimating && sequenceIndex === 0 && activeCommand === "GET READY...";
+            const isInitialPhase = !isAnimating && sequenceIndex === 0 && (activeCommand === "READY" || activeCommand === "GET READY...");
             const shouldShowX = (isInitialPhase && f.name === 'TOP') || // Startup - always TOP
                                (isAnswered && currentXFace === f.name) || // Free practice correct answer reveal
                                (isReviewMode && currentXFace === f.name); // Review mode correct answer reveal
@@ -465,6 +480,12 @@ const CubeRotationEngine = (function() {
             score += 10;
             window.showToast("CORRECT");
             btnEl.classList.add('correct');
+            // Auto advance
+            setTimeout(() => {
+                if (active && isAnswered && !isQuizMode && !isReviewMode) {
+                    startRound();
+                }
+            }, 500);
         } else {
             window.playSound('wrong');
             window.showToast("WRONG");
@@ -880,6 +901,17 @@ const CubeRotationEngine = (function() {
             }
         }
     }
+
+    // Resize optimization
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (active && !isReviewMode) {
+                renderCube();
+            }
+        }, 150);
+    });
 
     return {
         start: function() {
