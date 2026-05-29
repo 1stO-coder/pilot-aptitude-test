@@ -764,7 +764,7 @@ const SkyAssembleEngine = (function() {
         
         quizNav.style.display = 'none';
         prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
+        nextBtn.style.display = 'block';
         submitBtn.style.display = 'none';
         linesToggle.style.display = 'flex';
         
@@ -821,9 +821,9 @@ const SkyAssembleEngine = (function() {
     pieceCountSelect.addEventListener('change', () => { if(!isQuizMode) initGame(); });
     linesToggle.querySelector('input').addEventListener('change', () => { drawMission(); drawOptions(); });
     
-    prevBtn.addEventListener('click', handlePrev);
-    nextBtn.addEventListener('click', handleNext);
-    submitBtn.addEventListener('click', submitQuiz);
+    prevBtn.onclick = handlePrev;
+    nextBtn.onclick = handleNext;
+    submitBtn.onclick = submitQuiz;
     
     document.getElementById('skyassemble-review-banner').addEventListener('click', exitReview);
 

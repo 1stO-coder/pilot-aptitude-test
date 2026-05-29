@@ -618,7 +618,7 @@ const HiddenImageEngine = (function() {
         
         quizNav.style.display = 'none';
         prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
+        nextBtn.style.display = 'block';
         submitBtn.style.display = 'none';
         
         score = 0; totalAttempts = 0; correctAttempts = 0;
@@ -662,9 +662,9 @@ const HiddenImageEngine = (function() {
 
     runModeSelect.addEventListener('change', toggleRunMode);
     densitySelect.addEventListener('change', () => { if(!isQuizMode) initGame(); });
-    prevBtn.addEventListener('click', handlePrev);
-    nextBtn.addEventListener('click', handleNext);
-    submitBtn.addEventListener('click', submitQuiz);
+    prevBtn.onclick = handlePrev;
+    nextBtn.onclick = handleNext;
+    submitBtn.onclick = submitQuiz;
 
     function handleKeyDown(e) {
         if (!active) return;

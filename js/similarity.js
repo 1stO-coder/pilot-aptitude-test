@@ -517,7 +517,7 @@ const SimilarityEngine = (function() {
             let m = Math.floor(quizTimerCount / 60).toString().padStart(2, '0');
             let s = (quizTimerCount % 60).toString().padStart(2, '0');
             timerVal.innerText = `${m}:${s}`;
-            playSound('timer');
+            window.playSound('timer');
         }, 1000);
         
         loadQuestion(0);
@@ -533,7 +533,7 @@ const SimilarityEngine = (function() {
         
         quizNav.style.display = 'none';
         prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
+        nextBtn.style.display = 'block';
         submitBtn.style.display = 'none';
         
         score = 0; totalAttempts = 0; correctAttempts = 0;
@@ -574,9 +574,9 @@ const SimilarityEngine = (function() {
 
     runModeSelect.addEventListener('change', toggleRunMode);
     complexitySelect.addEventListener('change', () => { if(!isQuizMode) initGame(); });
-    prevBtn.addEventListener('click', handlePrev);
-    nextBtn.addEventListener('click', handleNext);
-    submitBtn.addEventListener('click', submitQuiz);
+    prevBtn.onclick = handlePrev;
+    nextBtn.onclick = handleNext;
+    submitBtn.onclick = submitQuiz;
 
     function handleKeyDown(e) {
         if (!active) return;

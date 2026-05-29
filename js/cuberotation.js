@@ -276,15 +276,16 @@ const CubeRotationEngine = (function() {
             // Highlight the "X" face
             const userChoice = isQuizMode && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
             
-            // Show X at startup (sequenceIndex === 0) OR on correct reveal (isAnswered/isReviewMode)
-            const shouldShowX = (sequenceIndex === 0 && currentXFace === f.name) || // Startup
+            // Show X: before animation starts (initial phase), on answer reveal, or in review
+            const isInitialPhase = !isAnimating && sequenceIndex === 0 && activeCommand === "GET READY...";
+            const shouldShowX = (isInitialPhase && f.name === 'TOP') || // Startup - always TOP
                                (isAnswered && currentXFace === f.name) || // Free practice correct answer reveal
                                (isReviewMode && currentXFace === f.name); // Review mode correct answer reveal
                                
             if (shouldShowX) {
-                ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+                ctx.fillStyle = "rgba(16, 185, 129, 0.25)";
                 ctx.strokeStyle = "#10b981";
-                ctx.lineWidth = 2.5;
+                ctx.lineWidth = 3;
             } else if (isQuizMode && userChoice === f.name) {
                 ctx.fillStyle = "rgba(59, 130, 246, 0.15)";
                 ctx.strokeStyle = "#3b82f6";
@@ -308,11 +309,11 @@ const CubeRotationEngine = (function() {
             ctx.fillText(f.name, fx, fy);
             
             if (shouldShowX) {
-                ctx.font = 'bold 36px Outfit, sans-serif';
+                ctx.font = 'bold 48px Outfit, sans-serif';
                 ctx.fillStyle = "#10b981";
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 18;
                 ctx.shadowColor = "#10b981";
-                ctx.fillText("X", fx, fy - 2);
+                ctx.fillText("✕", fx, fy - 2);
                 ctx.shadowBlur = 0; // reset
             }
         });
@@ -410,12 +411,20 @@ const CubeRotationEngine = (function() {
         activeCommand = "GET READY...";
         commandDisplay.innerText = activeCommand;
         
-        currentMatrix = identityMatrix;
-        targetMatrix = identityMatrix;
+        currentMatrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
+        targetMatrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
         animProgress = 1.0;
         animDirection = null;
         
-        statusMsg.innerText = "จำตำแหน่งตั้งต้นของ X (อยู่ที่ด้านบน TOP) การทดสอบกำลังจะเริ่มขึ้น...";
+        statusMsg.innerText = "จำตำแหน่งตั้งต้นของ ✕ (อยู่ที่ด้านบน TOP) การทดสอบกำลังจะเริ่มขึ้น...";
         choicesContainer.style.display = 'none';
         startBtn.style.display = 'none';
         
@@ -426,8 +435,8 @@ const CubeRotationEngine = (function() {
 
         renderCube();
         
-        // Start roll sequence after 1.8 seconds
-        gameTimer = setTimeout(playNextCommand, 1800);
+        // Start roll sequence after 2.5 seconds (longer to let user see X)
+        gameTimer = setTimeout(playNextCommand, 2500);
         questionStartTime = Date.now();
     }
 
@@ -527,16 +536,24 @@ const CubeRotationEngine = (function() {
             activeCommand = "GET READY...";
             commandDisplay.innerText = activeCommand;
             
-            currentMatrix = identityMatrix;
-            targetMatrix = identityMatrix;
+            currentMatrix = [
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]
+            ];
+            targetMatrix = [
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]
+            ];
             animProgress = 1.0;
             animDirection = null;
             
-            statusMsg.innerText = "จำตำแหน่งตั้งต้นของ X (อยู่ที่ด้านบน TOP) การหมุนกำลังจะเริ่มขึ้น...";
+            statusMsg.innerText = "จำตำแหน่งตั้งต้นของ ✕ (อยู่ที่ด้านบน TOP) การหมุนกำลังจะเริ่มขึ้น...";
             renderCube();
             
             clearTimeout(gameTimer);
-            gameTimer = setTimeout(playNextCommand, 1800);
+            gameTimer = setTimeout(playNextCommand, 2500);
         } else {
             // Already played question: jump directly to selection screen
             clearTimeout(gameTimer);
@@ -712,7 +729,7 @@ const CubeRotationEngine = (function() {
         modeTag.innerText = "Free Practice";
         document.querySelectorAll('.q-only').forEach(el => el.style.display = 'none');
         
-        // Hide exam-specific elements
+        // Hide exam-specific elements only
         quizNav.style.display = 'none';
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
@@ -731,14 +748,22 @@ const CubeRotationEngine = (function() {
         choicesContainer.style.display = 'none';
         startBtn.style.display = 'block';
         startBtn.innerText = "เริ่มรอบใหม่ (START)";
-        statusMsg.innerText = "สังเกตตำแหน่งเครื่องหมาย X บนลูกบาศก์ กดเริ่มเพื่อเริ่มเล่นทรานสิชัน";
+        statusMsg.innerText = "สังเกตตำแหน่งเครื่องหมาย ✕ บนลูกบาศก์ กดเริ่มเพื่อเริ่มเล่นทรานสิชัน";
         
-        currentMatrix = identityMatrix;
-        targetMatrix = identityMatrix;
+        currentMatrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
+        targetMatrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
         animProgress = 1.0;
         animDirection = null;
         
-        // Reset nextBtn binding just in case
+        // Reset nextBtn binding
         nextBtn.onclick = handleNext;
         
         renderCube();
@@ -808,9 +833,10 @@ const CubeRotationEngine = (function() {
     });
 
     runModeSelect.addEventListener('change', toggleRunMode);
-    prevBtn.addEventListener('click', handlePrev);
-    nextBtn.addEventListener('click', handleNext);
-    submitBtn.addEventListener('click', submitQuiz);
+    // Use onclick instead of addEventListener to prevent double-handler bug
+    prevBtn.onclick = handlePrev;
+    nextBtn.onclick = handleNext;
+    submitBtn.onclick = submitQuiz;
 
     function handleKeyDown(e) {
         if (!active) return;

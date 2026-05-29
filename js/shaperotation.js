@@ -62,7 +62,7 @@ const ShapeRotationEngine = (function() {
 
     // --- Diverse Asymmetric Polygon Generator ---
     function generateDiversePolygon(numVertices, size = 32) {
-        const type = rnd(1, 5);
+        const type = rnd(1, 10);
         let pts = [];
         if (type === 1) {
             // L-Shape Block
@@ -120,6 +120,85 @@ const ShapeRotationEngine = (function() {
                 [-size + rnd(0, 10), -rnd(5, 15)]
             ];
             if (numVertices < 6) {
+                pts = pts.slice(0, numVertices);
+            }
+        } else if (type === 5) {
+            // Staircase/Step shape
+            let s = rnd(10, 18);
+            pts = [
+                [-s*2, -s*2],
+                [-s, -s*2],
+                [-s, -s],
+                [0, -s],
+                [0, 0],
+                [s, 0],
+                [s, s + rnd(0, 8)],
+                [-s*2, s + rnd(0, 5)]
+            ];
+            if (numVertices < pts.length) {
+                pts = pts.slice(0, numVertices);
+            }
+        } else if (type === 6) {
+            // T-Shape (asymmetric)
+            let w = rnd(12, 20);
+            let h = rnd(20, 30);
+            let stemW = rnd(8, 14);
+            pts = [
+                [-w - rnd(0, 8), -h/2],
+                [w + rnd(0, 5), -h/2],
+                [w + rnd(0, 5), -h/2 + rnd(10, 15)],
+                [stemW, -h/2 + rnd(10, 15)],
+                [stemW + rnd(-3, 3), h/2 + rnd(0, 5)],
+                [-stemW + rnd(-3, 3), h/2],
+                [-stemW, -h/2 + rnd(10, 15)],
+                [-w - rnd(0, 8), -h/2 + rnd(10, 15)]
+            ];
+            if (numVertices < pts.length) {
+                pts = pts.slice(0, numVertices);
+            }
+        } else if (type === 7) {
+            // Zigzag/Lightning bolt
+            let s = rnd(8, 14);
+            pts = [
+                [-s + rnd(-3, 3), -s*3],
+                [s + rnd(0, 5), -s*2 + rnd(-3, 3)],
+                [rnd(-3, 3), -s + rnd(-3, 3)],
+                [s + rnd(3, 8), rnd(-3, 3)],
+                [rnd(-3, 3), s + rnd(-3, 3)],
+                [s + rnd(0, 5), s*2 + rnd(-3, 3)],
+                [-s + rnd(-3, 3), s*3]
+            ];
+            if (numVertices < 7) {
+                pts = pts.slice(0, numVertices);
+            }
+        } else if (type === 8) {
+            // Pentagon with notch (pac-man style)
+            let r = rnd(25, 35);
+            pts = [
+                [0, -r],
+                [r * 0.95, -r * 0.31],
+                [r * 0.59, r * 0.81],
+                [0, r * 0.3 + rnd(-5, 5)], // notch inward
+                [-r * 0.59, r * 0.81],
+                [-r * 0.95, -r * 0.31]
+            ];
+            if (numVertices > 6) {
+                pts.splice(3, 0, [rnd(3, 10), rnd(5, 15)]); // extra notch vertex
+            }
+        } else if (type === 9) {
+            // Hook/J-shape
+            let s = rnd(10, 16);
+            pts = [
+                [s, -s*2 - rnd(0, 5)],
+                [s*2, -s*2],
+                [s*2 + rnd(0, 5), s],
+                [s, s + rnd(3, 8)],
+                [-s + rnd(-3, 3), s + rnd(0, 5)],
+                [-s*2, rnd(-5, 5)],
+                [-s, -s + rnd(-3, 3)],
+                [0, -s*2 + rnd(-3, 3)]
+            ];
+            if (numVertices < pts.length) {
                 pts = pts.slice(0, numVertices);
             }
         } else {
@@ -542,7 +621,7 @@ const ShapeRotationEngine = (function() {
             let m = Math.floor(quizTimerCount / 60).toString().padStart(2, '0');
             let s = (quizTimerCount % 60).toString().padStart(2, '0');
             timerVal.innerText = `${m}:${s}`;
-            playSound('timer');
+            window.playSound('timer');
         }, 1000);
         
         loadQuestion(0);
@@ -558,7 +637,7 @@ const ShapeRotationEngine = (function() {
         
         quizNav.style.display = 'none';
         prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
+        nextBtn.style.display = 'block';
         submitBtn.style.display = 'none';
         
         score = 0; totalAttempts = 0; correctAttempts = 0;
@@ -599,9 +678,10 @@ const ShapeRotationEngine = (function() {
 
     runModeSelect.addEventListener('change', toggleRunMode);
     difficultySelect.addEventListener('change', () => { if(!isQuizMode) initGame(); });
-    prevBtn.addEventListener('click', handlePrev);
-    nextBtn.addEventListener('click', handleNext);
-    submitBtn.addEventListener('click', submitQuiz);
+    // Use onclick instead of addEventListener to prevent double-handler bug
+    prevBtn.onclick = handlePrev;
+    nextBtn.onclick = handleNext;
+    submitBtn.onclick = submitQuiz;
 
     function handleKeyDown(e) {
         if (!active) return;
