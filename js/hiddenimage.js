@@ -81,6 +81,26 @@ const HiddenImageEngine = (function() {
         return { w: rect.width, h: rect.height };
     }
 
+    function getDrawingScale() {
+        let optionCanvasDim = 120; // fallback default
+        const firstOptionCanv = document.querySelector('[id^="hidden-opt-canvas-"]');
+        if (firstOptionCanv) {
+            const rect = firstOptionCanv.parentNode.getBoundingClientRect();
+            if (rect.width > 0) {
+                optionCanvasDim = Math.min(rect.width, rect.height);
+            }
+        }
+        
+        let maxRadius = 1;
+        REF_SHAPES.forEach(sym => {
+            sym.pts.forEach(p => {
+                let r = Math.hypot(p[0], p[1]);
+                if (r > maxRadius) maxRadius = r;
+            });
+        });
+        return (optionCanvasDim * 0.36) / maxRadius;
+    }
+
     // --- Image / Noise Generation ---
     function generatePattern(dims) {
         // 1. Choose a target shape from pool
@@ -94,10 +114,13 @@ const HiddenImageEngine = (function() {
         // Random rotation
         const rotAngle = Math.random() * Math.PI * 2;
         
-        // Rotate and Translate points
+        // Unified dynamic scaling
+        const scale = getDrawingScale();
+        
+        // Rotate, scale and Translate points
         embeddedPolygon = ref.pts.map(p => {
-            const rx = p[0] * Math.cos(rotAngle) - p[1] * Math.sin(rotAngle);
-            const ry = p[0] * Math.sin(rotAngle) + p[1] * Math.cos(rotAngle);
+            const rx = p[0] * scale * Math.cos(rotAngle) - p[1] * scale * Math.sin(rotAngle);
+            const ry = p[0] * scale * Math.sin(rotAngle) + p[1] * scale * Math.cos(rotAngle);
             return [cx + rx, cy + ry];
         });
 
@@ -308,13 +331,8 @@ const HiddenImageEngine = (function() {
                 octx.save();
                 octx.translate(dims.w / 2, dims.h / 2);
                 
-                // Dynamic scaling
-                let maxRadius = 1;
-                opt.pts.forEach(p => {
-                    let r = Math.hypot(p[0], p[1]);
-                    if (r > maxRadius) maxRadius = r;
-                });
-                let scale = (Math.min(dims.w, dims.h) * 0.38) / maxRadius;
+                // Unified dynamic scaling
+                const scale = getDrawingScale();
                 
                 let isHighlightedCorrect = false;
                 let isHighlightedSelected = false;

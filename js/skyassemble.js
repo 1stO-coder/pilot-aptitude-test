@@ -217,6 +217,38 @@ const SkyAssembleEngine = (function() {
         return { w: rect.width, h: rect.height };
     }
 
+    function getDrawingScale() {
+        let optionCanvasDim = 120; // fallback default
+        const firstOptionCanv = document.querySelector('[id^="sky-opt-canvas-"]');
+        if (firstOptionCanv) {
+            const rect = firstOptionCanv.parentNode.getBoundingClientRect();
+            if (rect.width > 0) {
+                optionCanvasDim = Math.min(rect.width, rect.height);
+            }
+        }
+        
+        let maxRadius = 1;
+        if (gameData && gameData.options) {
+            gameData.options.forEach(opt => {
+                if (opt.base) {
+                    opt.base.forEach(p => {
+                        let r = Math.hypot(p[0], p[1]);
+                        if (r > maxRadius) maxRadius = r;
+                    });
+                }
+                if (opt.packedFrags) {
+                    opt.packedFrags.forEach(f => {
+                        f.pts.forEach(p => {
+                            let r = Math.hypot(f.renderPos[0] + p[0], f.renderPos[1] + p[1]);
+                            if (r > maxRadius) maxRadius = r;
+                        });
+                    });
+                }
+            });
+        }
+        return (optionCanvasDim * 0.36) / maxRadius;
+    }
+
     function drawMission() {
         if (!active) return;
         const dims = setupCanvas(canvas);
@@ -226,6 +258,7 @@ const SkyAssembleEngine = (function() {
         
         const showLines = linesToggle.querySelector('input').checked;
         const activeMode = gameData.mode;
+        const scale = getDrawingScale();
 
         ctx.save();
         ctx.translate(dims.w / 2, dims.h / 2); 
@@ -236,8 +269,8 @@ const SkyAssembleEngine = (function() {
         if (activeMode === 'assemble') {
             gameData.missionPacked.forEach(f => {
                 ctx.beginPath();
-                ctx.moveTo(f.renderPos[0] + f.pts[0][0], f.renderPos[1] + f.pts[0][1]);
-                f.pts.forEach(p => ctx.lineTo(f.renderPos[0] + p[0], f.renderPos[1] + p[1]));
+                ctx.moveTo((f.renderPos[0] + f.pts[0][0]) * scale, (f.renderPos[1] + f.pts[0][1]) * scale);
+                f.pts.forEach(p => ctx.lineTo((f.renderPos[0] + p[0]) * scale, (f.renderPos[1] + p[1]) * scale));
                 ctx.closePath();
                 
                 ctx.fillStyle = "rgba(0, 242, 254, 0.12)"; 
@@ -248,8 +281,8 @@ const SkyAssembleEngine = (function() {
             });
         } else {
             ctx.beginPath();
-            ctx.moveTo(gameData.baseShape[0][0], gameData.baseShape[0][1]);
-            gameData.baseShape.forEach(p => ctx.lineTo(p[0], p[1]));
+            ctx.moveTo(gameData.baseShape[0][0] * scale, gameData.baseShape[0][1] * scale);
+            gameData.baseShape.forEach(p => ctx.lineTo(p[0] * scale, p[1] * scale));
             ctx.closePath();
             
             ctx.fillStyle = "rgba(0, 242, 254, 0.12)"; 
@@ -264,8 +297,8 @@ const SkyAssembleEngine = (function() {
                 if (correctOpt && correctOpt.frags) {
                     correctOpt.frags.forEach(f => {
                         ctx.beginPath();
-                        ctx.moveTo(f[0][0], f[0][1]);
-                        f.forEach(p => ctx.lineTo(p[0], p[1]));
+                        ctx.moveTo(f[0][0] * scale, f[0][1] * scale);
+                        f.forEach(p => ctx.lineTo(p[0] * scale, p[1] * scale));
                         ctx.closePath();
                         ctx.setLineDash([4, 4]); 
                         ctx.strokeStyle = "rgba(0, 242, 254, 0.85)"; 
@@ -357,11 +390,13 @@ const SkyAssembleEngine = (function() {
                     octx.shadowColor = "rgba(0, 242, 254, 0.3)";
                 }
 
+                const scale = getDrawingScale();
+
                 if (activeMode === 'assemble') {
                     if (showLines || isHighlightedCorrect) {
                         octx.beginPath();
-                        octx.moveTo(opt.base[0][0], opt.base[0][1]);
-                        opt.base.forEach(p => octx.lineTo(p[0], p[1]));
+                        octx.moveTo(opt.base[0][0] * scale, opt.base[0][1] * scale);
+                        opt.base.forEach(p => octx.lineTo(p[0] * scale, p[1] * scale));
                         octx.closePath();
                         
                         octx.fillStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.18)" : (isHighlightedWrong ? "rgba(244, 63, 94, 0.18)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.18)" : "rgba(0, 242, 254, 0.12)"));
@@ -373,8 +408,8 @@ const SkyAssembleEngine = (function() {
                         if (opt.frags) {
                             opt.frags.forEach(f => {
                                 octx.beginPath();
-                                octx.moveTo(f[0][0], f[0][1]);
-                                f.forEach(p => octx.lineTo(p[0], p[1]));
+                                octx.moveTo(f[0][0] * scale, f[0][1] * scale);
+                                f.forEach(p => octx.lineTo(p[0] * scale, p[1] * scale));
                                 octx.closePath();
                                 octx.setLineDash([4, 4]); 
                                 octx.strokeStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.7)" : (isHighlightedWrong ? "rgba(244, 63, 94, 0.7)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.7)" : "rgba(0, 242, 254, 0.7)")); 
@@ -385,8 +420,8 @@ const SkyAssembleEngine = (function() {
                         }
                     } else {
                         octx.beginPath();
-                        octx.moveTo(opt.base[0][0], opt.base[0][1]);
-                        opt.base.forEach(p => octx.lineTo(p[0], p[1]));
+                        octx.moveTo(opt.base[0][0] * scale, opt.base[0][1] * scale);
+                        opt.base.forEach(p => octx.lineTo(p[0] * scale, p[1] * scale));
                         octx.closePath();
                         
                         octx.fillStyle = isHighlightedSelected ? "rgba(59, 130, 246, 0.18)" : "rgba(0, 242, 254, 0.12)"; 
@@ -398,8 +433,8 @@ const SkyAssembleEngine = (function() {
                 } else {
                     opt.packedFrags.forEach(f => {
                         octx.beginPath();
-                        octx.moveTo(f.renderPos[0] + f.pts[0][0], f.renderPos[1] + f.pts[0][1]);
-                        f.pts.forEach(p => octx.lineTo(f.renderPos[0] + p[0], f.renderPos[1] + p[1]));
+                        octx.moveTo((f.renderPos[0] + f.pts[0][0]) * scale, (f.renderPos[1] + f.pts[0][1]) * scale);
+                        f.pts.forEach(p => octx.lineTo((f.renderPos[0] + p[0]) * scale, (f.renderPos[1] + p[1]) * scale));
                         octx.closePath();
                         
                         octx.fillStyle = isHighlightedCorrect ? "rgba(16, 185, 129, 0.15)" : (isHighlightedSelected ? "rgba(59, 130, 246, 0.15)" : "rgba(0, 242, 254, 0.12)");

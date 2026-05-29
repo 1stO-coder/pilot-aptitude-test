@@ -241,6 +241,24 @@ const ShapeRotationEngine = (function() {
         return { w: rect.width, h: rect.height };
     }
 
+    function getDrawingScale() {
+        let optionCanvasDim = 120; // fallback default
+        const firstOptionCanv = document.querySelector('[id^="shape-opt-canvas-"]');
+        if (firstOptionCanv) {
+            const rect = firstOptionCanv.parentNode.getBoundingClientRect();
+            if (rect.width > 0) {
+                optionCanvasDim = Math.min(rect.width, rect.height);
+            }
+        }
+        
+        let maxRadius = 1;
+        basePolygon.forEach(p => {
+            let r = Math.hypot(p[0], p[1]);
+            if (r > maxRadius) maxRadius = r;
+        });
+        return (optionCanvasDim * 0.36) / maxRadius;
+    }
+
     function drawReference() {
         if (!active) return;
         const dims = setupCanvas(refCanvas);
@@ -249,13 +267,8 @@ const ShapeRotationEngine = (function() {
         refCtx.save();
         refCtx.translate(dims.w / 2, dims.h / 2);
         
-        // Dynamic scaling
-        let maxRadius = 1;
-        basePolygon.forEach(p => {
-            let r = Math.hypot(p[0], p[1]);
-            if (r > maxRadius) maxRadius = r;
-        });
-        let scale = (Math.min(dims.w, dims.h) * 0.38) / maxRadius;
+        // Unified dynamic scaling
+        const scale = getDrawingScale();
         
         refCtx.shadowBlur = 10;
         refCtx.shadowColor = "rgba(0, 242, 254, 0.4)";
@@ -325,13 +338,8 @@ const ShapeRotationEngine = (function() {
                 octx.save();
                 octx.translate(dims.w / 2, dims.h / 2);
                 
-                // Dynamic scaling
-                let maxRadius = 1;
-                opt.pts.forEach(p => {
-                    let r = Math.hypot(p[0], p[1]);
-                    if (r > maxRadius) maxRadius = r;
-                });
-                let scale = (Math.min(dims.w, dims.h) * 0.38) / maxRadius;
+                // Unified dynamic scaling
+                const scale = getDrawingScale();
                 
                 let isHighlightedCorrect = false;
                 let isHighlightedSelected = false;
