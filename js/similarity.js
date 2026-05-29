@@ -327,7 +327,10 @@ const SimilarityEngine = (function() {
     }
 
     function checkAnswer(idx, cardEl) {
+        if (isAnswered || isReviewMode) return;
+
         if (isQuizMode) {
+            isAnswered = true;
             quizQuestions[currentQIndex].userAnswer = idx;
             updateQuizNavigator();
             drawOptions();
@@ -351,7 +354,6 @@ const SimilarityEngine = (function() {
             window.playSound('correct');
             correctAttempts++;
             score += 10;
-            window.showToast("CORRECT");
             cardEl.classList.add('correct');
             // Auto advance with clearing highlights first (Task 5)
             setTimeout(() => {

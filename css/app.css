@@ -553,11 +553,11 @@ body, html {
 }
 
 .hiddenimage-split-view .canvas-container {
-    flex: 1.3;
+    flex: 1;
 }
 
 .hiddenimage-split-view .options-container {
-    flex: 0.7;
+    flex: 1;
 }
 
 .options-grid-4 {

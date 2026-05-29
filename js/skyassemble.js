@@ -574,7 +574,10 @@ const SkyAssembleEngine = (function() {
     }
 
     function checkAnswer(idx, cardEl) {
+        if (isAnswered || isReviewMode) return;
+
         if (isQuizMode) {
+            isAnswered = true;
             quizQuestions[currentQIndex].userAnswer = idx;
             updateQuizNavigator();
             drawOptions();
@@ -599,7 +602,6 @@ const SkyAssembleEngine = (function() {
             correctAttempts++;
             score += 10;
             streak++;
-            window.showToast("CORRECT");
             cardEl.classList.add('correct');
             // Auto advance with clearing highlights first (Task 5)
             setTimeout(() => {

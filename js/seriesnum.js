@@ -336,7 +336,6 @@ const SeriesNumEngine = (function() {
                 window.playSound('correct');
                 blank.className = "series-blank correct";
                 card.classList.add('correct-card');
-                window.showToast("CORRECT");
                 // Auto advance with clearing highlights first (Task 5)
                 setTimeout(() => {
                     if (active && q.picked !== null && runModeSelect.value !== 'quiz') {

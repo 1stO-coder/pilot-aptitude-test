@@ -257,10 +257,21 @@ function renderDashboard() {
         const statsLabel = document.getElementById(`stats-${gid}`);
         
         if (gameSessions.length > 0) {
-            const maxScore = Math.max(...gameSessions.map(s => s.score));
             const maxAcc = Math.max(...gameSessions.map(s => s.pct));
             
-            statsLabel.innerText = `เล่นแล้ว ${gameSessions.length} ครั้ง · Max ${maxAcc}%`;
+            const quizSessions = gameSessions.filter(s => s.mode === 'quiz');
+            let bestStr = "";
+            if (quizSessions.length > 0) {
+                let bestSession = quizSessions[0];
+                quizSessions.forEach(s => {
+                    if (s.pct > bestSession.pct || (s.pct === bestSession.pct && s.sec < bestSession.sec)) {
+                        bestSession = s;
+                    }
+                });
+                bestStr = ` · Best Exam: ${bestSession.correct}/${bestSession.total} (${bestSession.pct}%)`;
+            }
+            
+            statsLabel.innerText = `เล่นแล้ว ${gameSessions.length} ครั้ง · Max ${maxAcc}%${bestStr}`;
             progressFill.style.width = `${maxAcc}%`;
         } else {
             statsLabel.innerText = "ยังไม่ได้ทดสอบ";
@@ -319,6 +330,42 @@ function renderDashboard() {
             });
         }
     }
+}
+
+function updateLobbyBestRecords() {
+    loadDB();
+    const ss = appState.sessions;
+    const GAME_IDS = ['skyassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
+    
+    GAME_IDS.forEach(gid => {
+        const gameSessions = ss.filter(s => s.gameId === gid);
+        const lobbyBestEl = document.getElementById(`${gid}-lobby-best`);
+        
+        if (lobbyBestEl) {
+            const quizSessions = gameSessions.filter(s => s.mode === 'quiz');
+            if (quizSessions.length > 0) {
+                let bestSession = quizSessions[0];
+                quizSessions.forEach(s => {
+                    if (s.pct > bestSession.pct || (s.pct === bestSession.pct && s.sec < bestSession.sec)) {
+                        bestSession = s;
+                    }
+                });
+                const m = Math.floor(bestSession.sec / 60);
+                const s = bestSession.sec % 60;
+                const timeStr = `${m}:${s.toString().padStart(2, '0')} นาที`;
+                
+                lobbyBestEl.innerHTML = `🏆 <b>สถิติที่ดีที่สุด (Best Record):</b> ถูก ${bestSession.correct}/${bestSession.total} ข้อ (${bestSession.pct}%) · เวลา ${timeStr}`;
+                lobbyBestEl.style.color = '#00f2fe';
+                lobbyBestEl.style.background = 'rgba(0, 242, 254, 0.05)';
+                lobbyBestEl.style.borderColor = 'rgba(0, 242, 254, 0.2)';
+            } else {
+                lobbyBestEl.innerHTML = `💡 <b>ยังไม่มีบันทึกสถิติแบบทดสอบจับเวลา</b> (ทำโหมดข้อสอบเพื่อบันทึกสถิติ)`;
+                lobbyBestEl.style.color = 'var(--text-dim)';
+                lobbyBestEl.style.background = 'rgba(255, 255, 255, 0.01)';
+                lobbyBestEl.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+            }
+        }
+    });
 }
 
 // ═══════════════════════════════════════════════
@@ -406,6 +453,9 @@ function showQuizResult(gameId, correct, total, seconds, history) {
     
     saveDB();
     checkAchievements(newSession);
+    
+    renderDashboard();
+    updateLobbyBestRecords();
     
     // Open Modal window
     document.getElementById('quiz-result-modal').classList.add('active');
@@ -497,6 +547,7 @@ document.addEventListener('keydown', (e) => {
 window.onload = () => {
     loadDB();
     renderDashboard();
+    updateLobbyBestRecords();
     
     // Bind Lobby Mode Card clicks
     document.querySelectorAll('.lobby-mode-card').forEach(card => {
