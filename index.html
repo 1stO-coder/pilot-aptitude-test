@@ -32,8 +32,11 @@
                     <span class="nav-icon">📊</span> Dashboard
                 </button>
                 <div class="nav-section-title">Spatial & Orientation</div>
-                <button class="nav-item" data-view="skyassemble">
-                    <span class="nav-icon">🧩</span> Shapes Puzzle
+                <button class="nav-item" data-view="skyassemble_assemble">
+                    <span class="nav-icon">🧩</span> Shapes Assembly
+                </button>
+                <button class="nav-item" data-view="skyassemble_disassemble">
+                    <span class="nav-icon">🧩</span> Shapes Disassembly
                 </button>
 
                 <button class="nav-item" data-view="shaperotation">
@@ -91,19 +94,36 @@
                 <h2 class="section-title">เลือกโมดูลการฝึกอบรม (Training Modules)</h2>
                 <div class="game-cards-grid">
                     
-                    <div class="game-select-card" data-launch="skyassemble">
+                    <div class="game-select-card" data-launch="skyassemble_assemble">
                         <div class="gsc-header">
                             <span class="gsc-icon">🧩</span>
                             <span class="gsc-badge">Spatial</span>
                         </div>
-                        <h3>Shapes Puzzle (SkyAssemble)</h3>
-                        <p>ประกอบชิ้นส่วนหรือแยกแยะรูปทรงเพื่อฝึกการรับรู้มิติทรงกลมและพื้นที่</p>
+                        <h3>Shapes Puzzle (Assembly)</h3>
+                        <p>ประกอบชิ้นส่วนย่อยให้กลายเป็นรูปทรงหลักเพื่อฝึกการรับรู้มิติทรงกลมและพื้นที่</p>
                         <div class="gsc-progress">
-                            <div class="gsc-progress-bar" id="progress-skyassemble" style="width: 0%"></div>
+                            <div class="gsc-progress-bar" id="progress-skyassemble_assemble" style="width: 0%"></div>
                         </div>
-                        <div class="gsc-best" id="best-skyassemble">สถิติดีที่สุด: -</div>
+                        <div class="gsc-best" id="best-skyassemble_assemble">สถิติดีที่สุด: -</div>
                         <div class="gsc-footer">
-                            <span class="gsc-stats" id="stats-skyassemble">ไม่มีข้อมูล</span>
+                            <span class="gsc-stats" id="stats-skyassemble_assemble">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="skyassemble_disassemble">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🧩</span>
+                            <span class="gsc-badge">Spatial</span>
+                        </div>
+                        <h3>Shapes Puzzle (Disassembly)</h3>
+                        <p>แยกแยะรูปทรงหลักออกเป็นชิ้นส่วนย่อยเพื่อฝึกการวิเคราะห์มิติสัมพันธ์</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-skyassemble_disassemble" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-best" id="best-skyassemble_disassemble">สถิติดีที่สุด: -</div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-skyassemble_disassemble">ไม่มีข้อมูล</span>
                             <button class="btn-launch">LAUNCH</button>
                         </div>
                     </div>
