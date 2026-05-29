@@ -411,7 +411,6 @@ const SeriesNumEngine = (function() {
             quizTimerInterval = setInterval(() => {
                 quizTimer--;
                 updateTimerText();
-                window.playSound('timer');
                 
                 if (quizTimer <= 60) {
                     timerVal.style.color = 'var(--wrong)';

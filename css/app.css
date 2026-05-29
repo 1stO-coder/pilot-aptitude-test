@@ -229,8 +229,6 @@ body, html {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
-    max-height: 400px;
-    overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
@@ -360,6 +358,21 @@ body, html {
     font-size: 11px;
     color: var(--text-dim);
     font-family: var(--font-mono);
+}
+
+.gsc-best {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    margin: 8px 0 12px 0 !important;
+    font-family: var(--font-mono);
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
 }
 
 .btn-launch {

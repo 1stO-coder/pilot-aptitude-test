@@ -555,7 +555,6 @@ const SimilarityEngine = (function() {
             let m = Math.floor(quizTimerCount / 60).toString().padStart(2, '0');
             let s = (quizTimerCount % 60).toString().padStart(2, '0');
             timerVal.innerText = `${m}:${s}`;
-            window.playSound('timer');
         }, 1000);
         
         loadQuestion(0);

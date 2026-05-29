@@ -255,12 +255,14 @@ function renderDashboard() {
         const gameSessions = ss.filter(s => s.gameId === gid);
         const progressFill = document.getElementById(`progress-${gid}`);
         const statsLabel = document.getElementById(`stats-${gid}`);
+        const bestEl = document.getElementById(`best-${gid}`);
         
         if (gameSessions.length > 0) {
             const maxAcc = Math.max(...gameSessions.map(s => s.pct));
+            statsLabel.innerText = `เล่นแล้ว ${gameSessions.length} ครั้ง · Max ${maxAcc}%`;
+            progressFill.style.width = `${maxAcc}%`;
             
             const quizSessions = gameSessions.filter(s => s.mode === 'quiz');
-            let bestStr = "";
             if (quizSessions.length > 0) {
                 let bestSession = quizSessions[0];
                 quizSessions.forEach(s => {
@@ -268,14 +270,32 @@ function renderDashboard() {
                         bestSession = s;
                     }
                 });
-                bestStr = ` · Best Exam: ${bestSession.correct}/${bestSession.total} (${bestSession.pct}%)`;
+                const m = Math.floor(bestSession.sec / 60);
+                const s = bestSession.sec % 60;
+                const timeStr = `${m}:${s.toString().padStart(2, '0')}`;
+                if (bestEl) {
+                    bestEl.innerHTML = `🏆 สถิติดีที่สุด: ถูก ${bestSession.correct}/${bestSession.total} ข้อ (${bestSession.pct}%) · ${timeStr}`;
+                    bestEl.style.color = '#10b981';
+                    bestEl.style.background = 'rgba(16, 185, 129, 0.06)';
+                    bestEl.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                }
+            } else {
+                if (bestEl) {
+                    bestEl.innerHTML = `💡 สถิติดีที่สุด: ยังไม่ได้ทำข้อสอบ`;
+                    bestEl.style.color = 'var(--text-dim)';
+                    bestEl.style.background = 'rgba(255, 255, 255, 0.01)';
+                    bestEl.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+                }
             }
-            
-            statsLabel.innerText = `เล่นแล้ว ${gameSessions.length} ครั้ง · Max ${maxAcc}%${bestStr}`;
-            progressFill.style.width = `${maxAcc}%`;
         } else {
             statsLabel.innerText = "ยังไม่ได้ทดสอบ";
             progressFill.style.width = "0%";
+            if (bestEl) {
+                bestEl.innerHTML = `💡 สถิติดีที่สุด: ยังไม่ได้ทดสอบ`;
+                bestEl.style.color = 'var(--text-dim)';
+                bestEl.style.background = 'rgba(255, 255, 255, 0.01)';
+                bestEl.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+            }
         }
     });
     
