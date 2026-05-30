@@ -77,35 +77,49 @@ const RotatingViewEngine = (function() {
     }
 
     function isVoxelHidden(x, y, z, voxelSet) {
-        // Check if covered by a voxel directly in front along the diagonal line of sight (d > 0)
-        for (let d = 1; d <= 8; d++) {
-            if (voxelSet.has(`${x + d},${y + d},${z + d}`)) {
+        // Line of sight offsets for 40 degrees: (d, d, round(1.285575 * d))
+        const offsets = [
+            { dx: 1, dy: 1, dz: 1 },
+            { dx: 2, dy: 2, dz: 3 },
+            { dx: 3, dy: 3, dz: 4 },
+            { dx: 4, dy: 4, dz: 5 },
+            { dx: 5, dy: 5, dz: 6 },
+            { dx: 6, dy: 6, dz: 8 },
+            { dx: 7, dy: 7, dz: 9 },
+            { dx: 8, dy: 8, dz: 10 }
+        ];
+
+        for (let off of offsets) {
+            if (voxelSet.has(`${x + off.dx},${y + off.dy},${z + off.dz}`)) {
                 return true;
             }
         }
         
-        // Check Top Face occlusion: exists d >= 0 with (x+d, y+d, z+d+1)
+        // Check Top Face occlusion: exists d >= 0 with (x+d, y+d, z+d_offset+1)
         let topOccluded = false;
         for (let d = 0; d <= 8; d++) {
-            if (voxelSet.has(`${x + d},${y + d},${z + d + 1}`)) {
+            const dz_offset = Math.round(d * 1.285575);
+            if (voxelSet.has(`${x + d},${y + d},${z + dz_offset + 1}`)) {
                 topOccluded = true;
                 break;
             }
         }
         
-        // Check Left Face occlusion: exists d >= 0 with (x+d, y+d+1, z+d)
+        // Check Left Face occlusion: exists d >= 0 with (x+d, y+d+1, z+d_offset)
         let leftOccluded = false;
         for (let d = 0; d <= 8; d++) {
-            if (voxelSet.has(`${x + d},${y + d + 1},${z + d}`)) {
+            const dz_offset = Math.round(d * 1.285575);
+            if (voxelSet.has(`${x + d},${y + d + 1},${z + dz_offset}`)) {
                 leftOccluded = true;
                 break;
             }
         }
         
-        // Check Right Face occlusion: exists d >= 0 with (x+d+1, y+d, z+d)
+        // Check Right Face occlusion: exists d >= 0 with (x+d+1, y+d, z+d_offset)
         let rightOccluded = false;
         for (let d = 0; d <= 8; d++) {
-            if (voxelSet.has(`${x + d + 1},${y + d},${z + d}`)) {
+            const dz_offset = Math.round(d * 1.285575);
+            if (voxelSet.has(`${x + d + 1},${y + d},${z + dz_offset}`)) {
                 rightOccluded = true;
                 break;
             }
@@ -125,6 +139,42 @@ const RotatingViewEngine = (function() {
         return visibleCount;
     }
 
+    function getVisibleVoxelKey(model) {
+        const theta = 40 * Math.PI / 180;
+        const cosAngle = Math.cos(theta);
+        const sinAngle = Math.sin(theta);
+        const voxelSet = new Set(model.map(v => `${v.x},${v.y},${v.z}`));
+        const visible = model.filter(v => !isVoxelHidden(v.x, v.y, v.z, voxelSet));
+        
+        // Project to 2D screen coordinates
+        const projected = visible.map(v => {
+            const sx = (v.x - v.y) * cosAngle;
+            const sy = (v.x + v.y) * sinAngle - v.z;
+            return { x: sx, y: sy };
+        });
+        
+        if (projected.length === 0) return "";
+        
+        // Normalize 2D coordinates so min points are at (0, 0)
+        const minX = Math.min(...projected.map(p => p.x));
+        const minY = Math.min(...projected.map(p => p.y));
+        
+        const normalized = projected.map(p => ({
+            x: p.x - minX,
+            y: p.y - minY
+        }));
+        
+        // Sort first by x, then by y (with epsilon tolerance for float comparisons)
+        normalized.sort((a, b) => {
+            if (Math.abs(a.x - b.x) > 0.001) {
+                return a.x - b.x;
+            }
+            return a.y - b.y;
+        });
+        
+        return normalized.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(';');
+    }
+
     function generateQuestionData(difficulty) {
         const numBlocks = (difficulty === 'easy') ? rnd(4, 5) : 
                           (difficulty === 'medium') ? rnd(6, 8) : 
@@ -133,181 +183,196 @@ const RotatingViewEngine = (function() {
                           
         const gridSize = (difficulty === 'easy' || difficulty === 'medium') ? 3 : 4;
         
-        let targetModel = [];
-        let preRotatedTarget = [];
-        let targetRot = null;
-        let correctOption = null;
+        let fallbackData = null;
         
-        let attempts = 0;
-        let found = false;
-        
-        while (!found && attempts < 1000) {
-            attempts++;
+        for (let globalAttempt = 0; globalAttempt < 200; globalAttempt++) {
+            let targetModel = [];
+            let preRotatedTarget = [];
+            let targetRot = null;
+            let correctOption = null;
             
-            let candidateModel = normalizeModel(generateConnectedBlocks(numBlocks, gridSize));
-            let rotA = getRandom3DRotation();
-            let rotB = getRandom3DRotation();
+            let attempts = 0;
+            let found = false;
             
-            let preTarget = rotateVoxelModel(candidateModel, rotA.rx, rotA.ry, rotA.rz);
-            let corrOpt = rotateVoxelModel(candidateModel, rotB.rx, rotB.ry, rotB.rz);
-            
-            let visTarget = countVisibleVoxels(preTarget);
-            let visCorr = countVisibleVoxels(corrOpt);
-            
-            if (visTarget === visCorr) {
-                let maxHiddenAllowed = (difficulty === 'vhard') ? (numBlocks - 13) : 0;
-                if (maxHiddenAllowed < 0) maxHiddenAllowed = 0;
+            while (!found && attempts < 1000) {
+                attempts++;
                 
-                let hiddenTarget = numBlocks - visTarget;
-                if (hiddenTarget <= maxHiddenAllowed) {
-                    targetModel = candidateModel;
-                    preRotatedTarget = preTarget;
-                    targetRot = rotA;
-                    correctOption = corrOpt;
-                    found = true;
+                let candidateModel = normalizeModel(generateConnectedBlocks(numBlocks, gridSize));
+                let rotA = getRandom3DRotation();
+                let rotB = getRandom3DRotation();
+                
+                let preTarget = rotateVoxelModel(candidateModel, rotA.rx, rotA.ry, rotA.rz);
+                let corrOpt = rotateVoxelModel(candidateModel, rotB.rx, rotB.ry, rotB.rz);
+                
+                let visTarget = countVisibleVoxels(preTarget);
+                let visCorr = countVisibleVoxels(corrOpt);
+                
+                if (visTarget === visCorr) {
+                    let maxHiddenAllowed = (difficulty === 'vhard') ? (numBlocks - 13) : 0;
+                    if (maxHiddenAllowed < 0) maxHiddenAllowed = 0;
+                    
+                    let hiddenTarget = numBlocks - visTarget;
+                    if (hiddenTarget <= maxHiddenAllowed) {
+                        targetModel = candidateModel;
+                        preRotatedTarget = preTarget;
+                        targetRot = rotA;
+                        correctOption = corrOpt;
+                        found = true;
+                    }
                 }
             }
-        }
-        
-        if (!found) {
-            let candidateModel = normalizeModel(generateConnectedBlocks(numBlocks, gridSize));
-            targetModel = candidateModel;
-            targetRot = getRandom3DRotation();
-            preRotatedTarget = rotateVoxelModel(targetModel, targetRot.rx, targetRot.ry, targetRot.rz);
             
-            let foundCorr = false;
-            let targetVis = countVisibleVoxels(preRotatedTarget);
-            for (let i = 0; i < 50; i++) {
-                let rot = getRandom3DRotation();
-                let candidateCorr = rotateVoxelModel(targetModel, rot.rx, rot.ry, rot.rz);
-                if (countVisibleVoxels(candidateCorr) === targetVis) {
-                    correctOption = candidateCorr;
-                    foundCorr = true;
-                    break;
-                }
-            }
-            if (!foundCorr) {
-                correctOption = rotateVoxelModel(targetModel, targetRot.rx, targetRot.ry, targetRot.rz);
-            }
-        }
-        
-        // Distractors
-        let distractors = [];
-        let attemptsDist = 0;
-        let targetVis = countVisibleVoxels(preRotatedTarget);
-        
-        while (distractors.length < 3 && attemptsDist < 1000) {
-            attemptsDist++;
-            let candidate = createDistractorModel(targetModel, difficulty);
-
-            if (candidate && !isIsomorphic(targetModel, candidate)) {
-                let rotatedCandidate = null;
-                // If attemptsDist > 500, we relax the visible voxel count constraint to be more robust
-                const matchVis = (attemptsDist <= 500);
-
-                for (let rAttempt = 0; rAttempt < 30; rAttempt++) {
+            if (!found) {
+                let candidateModel = normalizeModel(generateConnectedBlocks(numBlocks, gridSize));
+                targetModel = candidateModel;
+                targetRot = getRandom3DRotation();
+                preRotatedTarget = rotateVoxelModel(targetModel, targetRot.rx, targetRot.ry, targetRot.rz);
+                
+                let foundCorr = false;
+                let targetVis = countVisibleVoxels(preRotatedTarget);
+                for (let i = 0; i < 50; i++) {
                     let rot = getRandom3DRotation();
-                    let tempRot = rotateVoxelModel(candidate, rot.rx, rot.ry, rot.rz);
-                    if (!matchVis || countVisibleVoxels(tempRot) === targetVis) {
-                        rotatedCandidate = tempRot;
+                    let candidateCorr = rotateVoxelModel(targetModel, rot.rx, rot.ry, rot.rz);
+                    if (countVisibleVoxels(candidateCorr) === targetVis) {
+                        correctOption = candidateCorr;
+                        foundCorr = true;
                         break;
                     }
                 }
-                
-                if (rotatedCandidate) {
-                    let unique = true;
-                    for (let d of distractors) {
-                        if (isIsomorphic(d.base, candidate)) {
-                            unique = false;
+                if (!foundCorr) {
+                    correctOption = rotateVoxelModel(targetModel, targetRot.rx, targetRot.ry, targetRot.rz);
+                }
+            }
+            
+            // Distractors
+            let distractors = [];
+            let attemptsDist = 0;
+            let targetVis = countVisibleVoxels(preRotatedTarget);
+            
+            while (distractors.length < 3 && attemptsDist < 1000) {
+                attemptsDist++;
+                let candidate = createDistractorModel(targetModel, difficulty);
+
+                if (candidate && !isIsomorphic(targetModel, candidate)) {
+                    let rotatedCandidate = null;
+                    const matchVis = (attemptsDist <= 500);
+
+                    for (let rAttempt = 0; rAttempt < 30; rAttempt++) {
+                        let rot = getRandom3DRotation();
+                        let tempRot = rotateVoxelModel(candidate, rot.rx, rot.ry, rot.rz);
+                        if (!matchVis || countVisibleVoxels(tempRot) === targetVis) {
+                            rotatedCandidate = tempRot;
                             break;
                         }
                     }
-                    if (unique) {
-                        distractors.push({
-                            base: candidate,
-                            rotated: rotatedCandidate
-                        });
+                    
+                    if (rotatedCandidate) {
+                        let unique = true;
+                        for (let d of distractors) {
+                            if (isIsomorphic(d.base, candidate)) {
+                                unique = false;
+                                break;
+                            }
+                        }
+                        if (unique) {
+                            distractors.push({
+                                base: candidate,
+                                rotated: rotatedCandidate
+                            });
+                        }
                     }
                 }
             }
-        }
-        
-        // Robust fallback: if we still don't have 3 distractors, generate by shifting targetModel again, disregarding uniqueness
-        while (distractors.length < 3) {
-            let candidate = createDistractorModel(targetModel, difficulty);
-            let rot = getRandom3DRotation();
-            let rotatedCandidate = rotateVoxelModel(candidate, rot.rx, rot.ry, rot.rz);
             
-            let unique = true;
-            for (let d of distractors) {
-                if (getVoxelModelKey(d.base) === getVoxelModelKey(candidate)) {
-                    unique = false;
-                    break;
+            if (distractors.length < 3) continue;
+
+            const correctOptionIndex = rnd(0, 3);
+            let optionsList = [];
+            let dIdx = 0;
+            for (let i = 0; i < 4; i++) {
+                if (i === correctOptionIndex) {
+                    optionsList.push(correctOption);
+                } else {
+                    optionsList.push(distractors[dIdx++].rotated);
                 }
             }
-            if (unique || distractors.length === 0) {
-                distractors.push({
-                    base: candidate,
-                    rotated: rotatedCandidate
-                });
-            } else {
-                distractors.push({
-                    base: candidate,
-                    rotated: rotatedCandidate
-                });
+            
+            const currentData = {
+                targetModel: targetModel,
+                preRotatedTarget: preRotatedTarget,
+                correctOptionIndex: correctOptionIndex,
+                optionsList: optionsList
+            };
+            
+            if (!fallbackData) fallbackData = currentData;
+            
+            // Verify visual uniqueness of options
+            let uniqueKeys = new Set();
+            let allUnique = true;
+            for (let opt of optionsList) {
+                let visKey = getVisibleVoxelKey(opt);
+                if (uniqueKeys.has(visKey)) {
+                    allUnique = false;
+                    break;
+                }
+                uniqueKeys.add(visKey);
+            }
+            
+            if (allUnique) {
+                return currentData;
             }
         }
         
-        const correctOptionIndex = rnd(0, 3);
-        let optionsList = [];
-        let dIdx = 0;
-        for (let i = 0; i < 4; i++) {
-            if (i === correctOptionIndex) {
-                optionsList.push(correctOption);
-            } else {
-                optionsList.push(distractors[dIdx++].rotated);
-            }
-        }
-        
-        return {
-            targetModel: targetModel,
-            preRotatedTarget: preRotatedTarget,
-            correctOptionIndex: correctOptionIndex,
-            optionsList: optionsList
-        };
+        return fallbackData;
     }
 
     // --- Connected Voxel Generator ---
     function generateConnectedBlocks(numBlocks, gridSize = 3) {
-        const start = Math.floor(gridSize / 2);
-        let blocks = [{ x: start, y: start, z: 0 }];
-        let blockSet = new Set([`${start},${start},0`]);
+        let finalBlocks = null;
+        for (let tries = 0; tries < 50; tries++) {
+            let start = Math.floor(gridSize / 2);
+            let blocks = [{ x: start, y: start, z: 0 }];
+            let blockSet = new Set([`${start},${start},0`]);
+            const dirs = [
+                { dx: 1, dy: 0, dz: 0 }, { dx: -1, dy: 0, dz: 0 },
+                { dx: 0, dy: 1, dz: 0 }, { dx: 0, dy: -1, dz: 0 },
+                { dx: 0, dy: 0, dz: 1 }, { dx: 0, dy: 0, dz: -1 }
+            ];
 
-        const dirs = [
-            { dx: 1, dy: 0, dz: 0 }, { dx: -1, dy: 0, dz: 0 },
-            { dx: 0, dy: 1, dz: 0 }, { dx: 0, dy: -1, dz: 0 },
-            { dx: 0, dy: 0, dz: 1 }, { dx: 0, dy: 0, dz: -1 }
-        ];
+            let attempts = 0;
+            while (blocks.length < numBlocks && attempts < 200) {
+                attempts++;
+                const parent = blocks[Math.floor(Math.random() * blocks.length)];
+                const dir = dirs[Math.floor(Math.random() * dirs.length)];
+                const nx = parent.x + dir.dx;
+                const ny = parent.y + dir.dy;
+                const nz = parent.z + dir.dz;
 
-        while (blocks.length < numBlocks) {
-            const parent = blocks[Math.floor(Math.random() * blocks.length)];
-            const dir = dirs[Math.floor(Math.random() * dirs.length)];
-
-            const nx = parent.x + dir.dx;
-            const ny = parent.y + dir.dy;
-            const nz = parent.z + dir.dz;
-
-            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && nz >= 0 && nz < gridSize) {
-                const key = `${nx},${ny},${nz}`;
-                if (!blockSet.has(key)) {
-                    if (nz === 0 || blockSet.has(`${nx},${ny},${nz-1}`)) {
-                        blocks.push({ x: nx, y: ny, z: nz });
-                        blockSet.add(key);
+                if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && nz >= 0 && nz < gridSize) {
+                    const key = `${nx},${ny},${nz}`;
+                    if (!blockSet.has(key)) {
+                        if (nz === 0 || blockSet.has(`${nx},${ny},${nz-1}`)) {
+                            blocks.push({ x: nx, y: ny, z: nz });
+                            blockSet.add(key);
+                        }
                     }
                 }
             }
+
+            if (blocks.length === numBlocks) {
+                const norm = normalizeModel(blocks);
+                if (numBlocks < 4 || (
+                    (Math.max(...norm.map(b => b.x)) >= 1) && 
+                    (Math.max(...norm.map(b => b.y)) >= 1) && 
+                    (Math.max(...norm.map(b => b.z)) >= 1)
+                )) {
+                    finalBlocks = norm;
+                    break;
+                }
+                finalBlocks = norm;
+            }
         }
-        return blocks;
+        return finalBlocks;
     }
 
     // --- 3D Rotation Matrix Math ---
@@ -353,7 +418,7 @@ const RotatingViewEngine = (function() {
         const minY = Math.min(...ys);
         const minZ = Math.min(...zs);
 
-        // Normalize points inside bounds [0, 2]
+        // Normalize points
         return rotated.map(b => ({
             x: b.x - minX,
             y: b.y - minY,
@@ -473,9 +538,7 @@ const RotatingViewEngine = (function() {
         return null;
     }
 
-    // Create modified distractor models (preserving block count via block-shifting)
-    // For easy mode: exactly 1 shift (difference = 1 block)
-    // For other modes: 1 or 2 shifts (difference = 1-2 blocks)
+    // Create modified distractor models
     function createDistractorModel(originalBlocks, difficulty) {
         const gridSize = (difficulty === 'easy' || difficulty === 'medium') ? 3 : 4;
         const maxShifts = (difficulty === 'easy') ? 1 : (Math.random() < 0.5 ? 1 : 2);
@@ -502,14 +565,6 @@ const RotatingViewEngine = (function() {
                 if (!isIsomorphic(originalBlocks, model)) {
                     return model;
                 }
-            }
-        }
-        
-        // Fallback: try 1-block shift if 2-block shift failed/was requested but is isomorphic
-        for (let attempt = 0; attempt < 30; attempt++) {
-            let nextModel = shiftOneBlock(currentModel, gridSize);
-            if (nextModel && !isIsomorphic(originalBlocks, nextModel)) {
-                return nextModel;
             }
         }
         
@@ -551,121 +606,72 @@ const RotatingViewEngine = (function() {
         const cz = (minZ + maxZ) / 2;
 
         // Apply rotation relative to center if rendering to the main interactive canvas
-        let renderedCubes = [];
+        let sorted = [];
         if (targetCanvas === canvas && (yawAngle !== 0 || pitchAngle !== 0)) {
-            renderedCubes = blocks.map(b => {
+            sorted = blocks.map(b => {
                 const rx = b.x - cx;
                 const ry = b.y - cy;
                 const rz = b.z - cz;
 
-                // Yaw rotation (around Z-axis)
                 const rx1 = rx * Math.cos(yawAngle) - ry * Math.sin(yawAngle);
                 const ry1 = rx * Math.sin(yawAngle) + ry * Math.cos(yawAngle);
-                const rz1 = rz;
-
-                // Pitch rotation (around X-axis)
                 const rx2 = rx1;
-                const ry2 = ry1 * Math.cos(pitchAngle) - rz1 * Math.sin(pitchAngle);
-                const rz2 = ry1 * Math.sin(pitchAngle) + rz1 * Math.cos(pitchAngle);
+                const ry2 = ry1 * Math.cos(pitchAngle) - rz * Math.sin(pitchAngle);
+                const rz2 = ry1 * Math.sin(pitchAngle) + rz * Math.cos(pitchAngle);
 
-                return {
-                    x: rx2,
-                    y: ry2,
-                    z: rz2,
-                    depth: rx2 + ry2 + rz2
-                };
+                return { x: rx2, y: ry2, z: rz2, depth: rx2 + ry2 + rz2 };
             });
-            // Sort depth-wise: back to front
-            renderedCubes.sort((a, b) => a.depth - b.depth);
+            sorted.sort((a, b) => a.depth - b.depth);
         } else {
-            // Default isometric sorting: depth = x + y + z relative to center
-            renderedCubes = blocks.map(b => {
-                const rx = b.x - cx;
-                const ry = b.y - cy;
-                const rz = b.z - cz;
-                return {
-                    x: rx,
-                    y: ry,
-                    z: rz,
-                    depth: rx + ry + rz
-                };
-            });
-            renderedCubes.sort((a, b) => a.depth - b.depth);
+            sorted = blocks.map(b => ({
+                x: b.x - cx, y: b.y - cy, z: b.z - cz,
+                depth: (b.x - cx) + (b.y - cy) + (b.z - cz)
+            }));
+            sorted.sort((a, b) => a.depth - b.depth);
         }
 
-        // Dynamic scale
-        const size = Math.min(cw, ch) * 0.13;
+        const size = Math.min(cw, ch) * 0.12;
         const ox = cw / 2;
-        const oy = ch / 2;
+        const oy = ch / 2 - size * 0.2;
 
-        // Styling based on feedback
-        let topColor = '#a5f3fc';
-        let leftColor = '#06b6d4';
-        let rightColor = '#0e7490';
-        let strokeColor = 'rgba(9, 9, 11, 0.4)';
+        let topColor = '#a5f3fc', leftColor = '#06b6d4', rightColor = '#0e7490', strokeColor = 'rgba(9, 9, 11, 0.4)';
+        if (isCorrectOutline) { topColor = '#a7f3d0'; leftColor = '#10b981'; rightColor = '#047857'; strokeColor = '#10b981'; }
+        else if (isWrongOutline) { topColor = '#fecdd3'; leftColor = '#f43f5e'; rightColor = '#be123c'; strokeColor = '#f43f5e'; }
+        else if (isSelectedOutline) { topColor = '#bfdbfe'; leftColor = '#3b82f6'; rightColor = '#1d4ed8'; strokeColor = '#3b82f6'; }
 
-        if (isCorrectOutline) {
-            topColor = '#a7f3d0'; // Green hue
-            leftColor = '#10b981';
-            rightColor = '#047857';
-            strokeColor = '#10b981';
-        } else if (isWrongOutline) {
-            topColor = '#fecdd3'; // Red hue
-            leftColor = '#f43f5e';
-            rightColor = '#be123c';
-            strokeColor = '#f43f5e';
-        } else if (isSelectedOutline) {
-            topColor = '#bfdbfe'; // Blue hue
-            leftColor = '#3b82f6';
-            rightColor = '#1d4ed8';
-            strokeColor = '#3b82f6';
-        }
+        const theta = 40 * Math.PI / 180;
+        const cosAngle = Math.cos(theta);
+        const sinAngle = Math.sin(theta);
 
-        // Render cubes
-        renderedCubes.forEach(b => {
-            const sx = ox + (b.x - b.y) * 0.866 * size;
-            const sy = oy + (b.x + b.y) * 0.5 * size - b.z * size;
+        sorted.forEach(b => {
+            const sx = ox + (b.x - b.y) * cosAngle * size;
+            const sy = oy + (b.x + b.y) * sinAngle * size - b.z * size;
 
-            // Top Face
             targetCtx.beginPath();
             targetCtx.moveTo(sx, sy - size);
-            targetCtx.lineTo(sx + 0.866 * size, sy - 0.5 * size);
-            targetCtx.lineTo(sx, sy);
-            targetCtx.lineTo(sx - 0.866 * size, sy - 0.5 * size);
+            targetCtx.lineTo(sx + cosAngle * size, sy - size + sinAngle * size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size);
+            targetCtx.lineTo(sx - cosAngle * size, sy - size + sinAngle * size);
             targetCtx.closePath();
-            targetCtx.fillStyle = topColor;
-            targetCtx.fill();
-            targetCtx.strokeStyle = strokeColor;
-            targetCtx.lineWidth = 1;
-            targetCtx.stroke();
+            targetCtx.fillStyle = topColor; targetCtx.fill();
+            targetCtx.strokeStyle = strokeColor; targetCtx.lineWidth = (isCorrectOutline || isWrongOutline || isSelectedOutline) ? 2 : 1.5; targetCtx.stroke();
 
-            // Left Face
             targetCtx.beginPath();
-            targetCtx.moveTo(sx - 0.866 * size, sy - 0.5 * size);
-            targetCtx.lineTo(sx, sy);
-            targetCtx.lineTo(sx, sy + size);
-            targetCtx.lineTo(sx - 0.866 * size, sy + 0.5 * size);
+            targetCtx.moveTo(sx - cosAngle * size, sy - size + sinAngle * size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size + size);
+            targetCtx.lineTo(sx - cosAngle * size, sy - size + sinAngle * size + size);
             targetCtx.closePath();
-            targetCtx.fillStyle = leftColor;
-            targetCtx.fill();
-            targetCtx.strokeStyle = strokeColor;
-            targetCtx.lineWidth = 1;
-            targetCtx.stroke();
+            targetCtx.fillStyle = leftColor; targetCtx.fill(); targetCtx.stroke();
 
-            // Right Face
             targetCtx.beginPath();
-            targetCtx.moveTo(sx, sy);
-            targetCtx.lineTo(sx + 0.866 * size, sy - 0.5 * size);
-            targetCtx.lineTo(sx + 0.866 * size, sy + 0.5 * size);
-            targetCtx.lineTo(sx, sy + size);
+            targetCtx.moveTo(sx, sy - size + 2 * sinAngle * size);
+            targetCtx.lineTo(sx + cosAngle * size, sy - size + sinAngle * size);
+            targetCtx.lineTo(sx + cosAngle * size, sy - size + sinAngle * size + size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size + size);
             targetCtx.closePath();
-            targetCtx.fillStyle = rightColor;
-            targetCtx.fill();
-            targetCtx.strokeStyle = strokeColor;
-            targetCtx.lineWidth = 1;
-            targetCtx.stroke();
+            targetCtx.fillStyle = rightColor; targetCtx.fill(); targetCtx.stroke();
         });
-
     }
 
     // --- Render Option List ---

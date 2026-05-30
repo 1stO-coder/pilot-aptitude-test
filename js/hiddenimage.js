@@ -116,8 +116,8 @@ const HiddenImageEngine = (function() {
         if (grid) {
             const rect = grid.getBoundingClientRect();
             if (rect.width > 0) {
-                let cellW = (rect.width - 4 * 15) / 5;
-                let cellH = rect.height;
+                let cellW = (rect.width - 3 * 15) / 4;
+                let cellH = grid.getBoundingClientRect().height || rect.height;
                 optionCanvasDim = Math.min(cellW, cellH);
             }
         }
@@ -130,7 +130,7 @@ const HiddenImageEngine = (function() {
                 if (r > maxRadius) maxRadius = r;
             });
         });
-        return (optionCanvasDim * 0.38) / maxRadius; // Safe scale for 1:1 matching without clipping
+        return (optionCanvasDim * 0.46) / maxRadius; // Safe scale for 1:1 matching without clipping
     }
 
     // --- Image / Noise Generation ---
@@ -328,8 +328,8 @@ const HiddenImageEngine = (function() {
         optionsGrid.innerHTML = '';
         const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
         
-        // Dynamically style grid columns for 5 options
-        optionsGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+        // Dynamically style grid columns for 4 options
+        optionsGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
         optionsGrid.style.gridTemplateRows = '1fr';
         
         optionsList.forEach((opt, idx) => {
@@ -446,13 +446,13 @@ const HiddenImageEngine = (function() {
         generatePattern(dims);
 
         optionsList = [];
-        correctOptionIndex = Math.floor(Math.random() * 5);
+        correctOptionIndex = Math.floor(Math.random() * 4);
         const pool = getShapesPool();
         let otherShapes = pool.filter((_, idx) => idx !== targetShapeIndex);
         otherShapes = shuffle(otherShapes);
         
         let oIdx = 0;
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 4; i++) {
             if (i === correctOptionIndex) {
                 optionsList.push(pool[targetShapeIndex]);
             } else {
@@ -674,14 +674,14 @@ const HiddenImageEngine = (function() {
         
         for (let i = 0; i < maxQuizQ; i++) {
             let pat = generatePattern(dims);
-            let corrIdx = Math.floor(Math.random() * 5);
+            let corrIdx = Math.floor(Math.random() * 4);
             let opts = [];
             
             let otherShapes = pool.filter((_, idx) => idx !== pat.targetShapeIndex);
             otherShapes = shuffle(otherShapes);
             
             let oIdx = 0;
-            for (let o = 0; o < 5; o++) {
+            for (let o = 0; o < 4; o++) {
                 if (o === corrIdx) {
                     opts.push(pool[pat.targetShapeIndex]);
                 } else {
@@ -805,9 +805,8 @@ const HiddenImageEngine = (function() {
             else if (key === '2' || key === 'b') idx = 1;
             else if (key === '3' || key === 'c') idx = 2;
             else if (key === '4' || key === 'd') idx = 3;
-            else if (key === '5' || key === 'e') idx = 4;
             
-            if (idx >= 0 && idx < 5) {
+            if (idx >= 0 && idx < 4) {
                 const cards = document.querySelectorAll('#hiddenimage-options-grid .option-card');
                 if (cards[idx]) {
                     checkAnswer(idx, cards[idx]);

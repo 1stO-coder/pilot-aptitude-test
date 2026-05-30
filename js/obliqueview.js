@@ -64,35 +64,49 @@ const ObliqueViewEngine = (function() {
     }
 
     function isVoxelHidden(x, y, z, voxelSet) {
-        // Check if covered by a voxel directly in front along the diagonal line of sight (d > 0)
-        for (let d = 1; d <= 8; d++) {
-            if (voxelSet.has(`${x + d},${y + d},${z + d}`)) {
+        // Line of sight offsets for 40 degrees: (d, d, round(1.285575 * d))
+        const offsets = [
+            { dx: 1, dy: 1, dz: 1 },
+            { dx: 2, dy: 2, dz: 3 },
+            { dx: 3, dy: 3, dz: 4 },
+            { dx: 4, dy: 4, dz: 5 },
+            { dx: 5, dy: 5, dz: 6 },
+            { dx: 6, dy: 6, dz: 8 },
+            { dx: 7, dy: 7, dz: 9 },
+            { dx: 8, dy: 8, dz: 10 }
+        ];
+
+        for (let off of offsets) {
+            if (voxelSet.has(`${x + off.dx},${y + off.dy},${z + off.dz}`)) {
                 return true;
             }
         }
         
-        // Check Top Face occlusion: exists d >= 0 with (x+d, y+d, z+d+1)
+        // Check Top Face occlusion: exists d >= 0 with (x+d, y+d, z+d_offset+1)
         let topOccluded = false;
         for (let d = 0; d <= 8; d++) {
-            if (voxelSet.has(`${x + d},${y + d},${z + d + 1}`)) {
+            const dz_offset = Math.round(d * 1.285575);
+            if (voxelSet.has(`${x + d},${y + d},${z + dz_offset + 1}`)) {
                 topOccluded = true;
                 break;
             }
         }
         
-        // Check Left Face occlusion: exists d >= 0 with (x+d, y+d+1, z+d)
+        // Check Left Face occlusion: exists d >= 0 with (x+d, y+d+1, z+d_offset)
         let leftOccluded = false;
         for (let d = 0; d <= 8; d++) {
-            if (voxelSet.has(`${x + d},${y + d + 1},${z + d}`)) {
+            const dz_offset = Math.round(d * 1.285575);
+            if (voxelSet.has(`${x + d},${y + d + 1},${z + dz_offset}`)) {
                 leftOccluded = true;
                 break;
             }
         }
         
-        // Check Right Face occlusion: exists d >= 0 with (x+d+1, y+d, z+d)
+        // Check Right Face occlusion: exists d >= 0 with (x+d+1, y+d, z+d_offset)
         let rightOccluded = false;
         for (let d = 0; d <= 8; d++) {
-            if (voxelSet.has(`${x + d + 1},${y + d},${z + d}`)) {
+            const dz_offset = Math.round(d * 1.285575);
+            if (voxelSet.has(`${x + d + 1},${y + d},${z + dz_offset}`)) {
                 rightOccluded = true;
                 break;
             }
@@ -114,7 +128,7 @@ const ObliqueViewEngine = (function() {
 
     function generateVisibleModel(numBlocks, gridSize) {
         let attempts = 0;
-        while (attempts < 1000) {
+        while (attempts < 2000) {
             attempts++;
             let candidate = generateConnectedBlocks(numBlocks, gridSize);
             // Check if all blocks are visible
@@ -122,16 +136,10 @@ const ObliqueViewEngine = (function() {
                 return candidate;
             }
         }
-        // Fallback: if we cannot find one with 100% visibility after 1000 attempts,
-        // we can allow a small number of hidden blocks, e.g. at most 1 or 2.
-        attempts = 0;
-        while (attempts < 500) {
-            attempts++;
-            let candidate = generateConnectedBlocks(numBlocks, gridSize);
-            let visibleCount = countVisibleVoxels(candidate);
-            if (numBlocks - visibleCount <= (gridSize >= 5 ? 2 : 1)) {
-                return candidate;
-            }
+        // Fallback: if we really cannot find one (should be extremely rare),
+        // we reduce numBlocks by 1 and try again recursively
+        if (numBlocks > 4) {
+            return generateVisibleModel(numBlocks - 1, gridSize);
         }
         return generateConnectedBlocks(numBlocks, gridSize);
     }
@@ -254,18 +262,22 @@ const ObliqueViewEngine = (function() {
         const ox = cw / 2;
         const oy = ch / 2;
 
+        const theta = 40 * Math.PI / 180;
+        const cosAngle = Math.cos(theta);
+        const sinAngle = Math.sin(theta);
+
         // Render cubes
         renderedCubes.forEach(b => {
-            const sx = ox + (b.x - b.y) * 0.866 * size;
-            const sy = oy + (b.x + b.y) * 0.5 * size - b.z * size;
+            const sx = ox + (b.x - b.y) * cosAngle * size;
+            const sy = oy + (b.x + b.y) * sinAngle * size - b.z * size;
 
             // Draw cube faces
             // 1. Top face
             targetCtx.beginPath();
             targetCtx.moveTo(sx, sy - size);
-            targetCtx.lineTo(sx + 0.866 * size, sy - 0.5 * size);
-            targetCtx.lineTo(sx, sy);
-            targetCtx.lineTo(sx - 0.866 * size, sy - 0.5 * size);
+            targetCtx.lineTo(sx + cosAngle * size, sy - size + sinAngle * size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size);
+            targetCtx.lineTo(sx - cosAngle * size, sy - size + sinAngle * size);
             targetCtx.closePath();
             targetCtx.fillStyle = '#a5f3fc'; // Bright Cyan
             targetCtx.fill();
@@ -275,10 +287,10 @@ const ObliqueViewEngine = (function() {
 
             // 2. Left face
             targetCtx.beginPath();
-            targetCtx.moveTo(sx - 0.866 * size, sy - 0.5 * size);
-            targetCtx.lineTo(sx, sy);
-            targetCtx.lineTo(sx, sy + size);
-            targetCtx.lineTo(sx - 0.866 * size, sy + 0.5 * size);
+            targetCtx.moveTo(sx - cosAngle * size, sy - size + sinAngle * size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size + size);
+            targetCtx.lineTo(sx - cosAngle * size, sy - size + sinAngle * size + size);
             targetCtx.closePath();
             targetCtx.fillStyle = '#06b6d4'; // Medium Cyan
             targetCtx.fill();
@@ -286,10 +298,10 @@ const ObliqueViewEngine = (function() {
 
             // 3. Right face
             targetCtx.beginPath();
-            targetCtx.moveTo(sx, sy);
-            targetCtx.lineTo(sx + 0.866 * size, sy - 0.5 * size);
-            targetCtx.lineTo(sx + 0.866 * size, sy + 0.5 * size);
-            targetCtx.lineTo(sx, sy + size);
+            targetCtx.moveTo(sx, sy - size + 2 * sinAngle * size);
+            targetCtx.lineTo(sx + cosAngle * size, sy - size + sinAngle * size);
+            targetCtx.lineTo(sx + cosAngle * size, sy - size + sinAngle * size + size);
+            targetCtx.lineTo(sx, sy - size + 2 * sinAngle * size + size);
             targetCtx.closePath();
             targetCtx.fillStyle = '#0e7490'; // Dark Cyan
             targetCtx.fill();
@@ -305,27 +317,30 @@ const ObliqueViewEngine = (function() {
             targetCtx.lineWidth = 3;
             targetCtx.textAlign = 'center';
 
+            const arrowDistX = currentGridSize * 0.85;
+            const arrowDistY = currentGridSize * 0.45;
+
             // Draw Side A arrow (Left pointing up-right)
             if (targetSideText === 'A') {
-                const ax = ox - size * (currentGridSize * 0.73);
-                const ay = oy + size * (currentGridSize * 0.27);
-                drawArrow(targetCtx, ax, ay, ax + size * (currentGridSize * 0.3), ay - size * (currentGridSize * 0.17), '#fbbf24');
+                const ax = ox - size * arrowDistX * cosAngle;
+                const ay = oy + size * arrowDistY * sinAngle;
+                drawArrow(targetCtx, ax, ay, ax + size * currentGridSize * 0.35 * cosAngle, ay - size * currentGridSize * 0.35 * sinAngle, '#fbbf24');
                 targetCtx.strokeText('ภาพด้านหน้า (Front View)', ax - 35, ay);
                 targetCtx.fillText('ภาพด้านหน้า (Front View)', ax - 35, ay);
             }
             // Draw Side B arrow (Right pointing up-left)
             else if (targetSideText === 'B') {
-                const bx = ox + size * (currentGridSize * 0.73);
-                const by = oy + size * (currentGridSize * 0.27);
-                drawArrow(targetCtx, bx, by, bx - size * (currentGridSize * 0.3), by - size * (currentGridSize * 0.17), '#fbbf24');
+                const bx = ox + size * arrowDistX * cosAngle;
+                const by = oy + size * arrowDistY * sinAngle;
+                drawArrow(targetCtx, bx, by, bx - size * currentGridSize * 0.35 * cosAngle, by - size * currentGridSize * 0.35 * sinAngle, '#fbbf24');
                 targetCtx.strokeText('ภาพด้านข้าง (Side View)', bx + 35, by);
                 targetCtx.fillText('ภาพด้านข้าง (Side View)', bx + 35, by);
             }
             // Draw Side C arrow (Top pointing down)
             else if (targetSideText === 'C') {
                 const cx = ox;
-                const cy = oy - size * (currentGridSize * 0.73);
-                drawArrow(targetCtx, cx, cy, cx, cy + size * (currentGridSize * 0.3), '#fbbf24');
+                const cy = oy - size * currentGridSize * 0.75;
+                drawArrow(targetCtx, cx, cy, cx, cy + size * currentGridSize * 0.35, '#fbbf24');
                 targetCtx.strokeText('ภาพด้านบน (Top View)', cx, cy - 15);
                 targetCtx.fillText('ภาพด้านบน (Top View)', cx, cy - 15);
             }
@@ -410,6 +425,54 @@ const ObliqueViewEngine = (function() {
         return JSON.stringify(subGrid);
     }
 
+    function is2DGridConnected(gridData) {
+        const gridSize = gridData.length;
+        let startR = -1, startC = -1;
+        let totalCells = 0;
+
+        for (let r = 0; r < gridSize; r++) {
+            for (let c = 0; c < gridSize; c++) {
+                if (gridData[r][c]) {
+                    if (startR === -1) {
+                        startR = r;
+                        startC = c;
+                    }
+                    totalCells++;
+                }
+            }
+        }
+
+        if (totalCells === 0) return false;
+
+        // Flood fill (allowing 8-way connectivity: horizontal, vertical, and diagonal)
+        const visited = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+        const queue = [{ r: startR, c: startC }];
+        visited[startR][startC] = true;
+        let count = 0;
+
+        const dirs = [
+            { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 },
+            { dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
+        ];
+
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            count++;
+            for (let d of dirs) {
+                const nr = curr.r + d.dr;
+                const nc = curr.c + d.dc;
+                if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                    if (gridData[nr][nc] && !visited[nr][nc]) {
+                        visited[nr][nc] = true;
+                        queue.push({ r: nr, c: nc });
+                    }
+                }
+            }
+        }
+
+        return count === totalCells;
+    }
+
     // Generate incorrect projections for choices
     function generateIncorrectProjections(correctGrid) {
         let dist = [];
@@ -426,6 +489,9 @@ const ObliqueViewEngine = (function() {
                 }
             }
             if (!hasCells) return false;
+
+            // Enforce that all blocks are connected (no isolated parts)
+            if (!is2DGridConnected(gridData)) return false;
 
             const croppedStr = getCroppedGridKey(gridData);
             if (!addedSet.has(croppedStr)) {
@@ -635,7 +701,7 @@ const ObliqueViewEngine = (function() {
         nextBtn.className = "btn-action";
 
         currentGridSize = (currentDifficulty === 'easy') ? 3 : (currentDifficulty === 'medium') ? 4 : 5;
-        const numBlocks = (currentDifficulty === 'easy') ? rnd(5, 7) : (currentDifficulty === 'medium') ? rnd(9, 12) : rnd(14, 20);
+        const numBlocks = (currentDifficulty === 'easy') ? rnd(4, 6) : (currentDifficulty === 'medium') ? rnd(7, 9) : rnd(10, 13);
         voxelModel = generateVisibleModel(numBlocks, currentGridSize);
         
         // Select random target projection side A, B, or C
@@ -869,7 +935,7 @@ const ObliqueViewEngine = (function() {
 
         quizQuestions = [];
         for (let i = 0; i < maxQuizQ; i++) {
-            const numBlocks = (currentDifficulty === 'easy') ? rnd(5, 7) : (currentDifficulty === 'medium') ? rnd(9, 12) : rnd(14, 20);
+            const numBlocks = (currentDifficulty === 'easy') ? rnd(4, 6) : (currentDifficulty === 'medium') ? rnd(7, 9) : rnd(10, 13);
             let model = generateVisibleModel(numBlocks, currentGridSize);
             let side = ['A', 'B', 'C'][rnd(0, 2)];
             let correctGrid = getOrthographicView(model, side);
