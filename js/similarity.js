@@ -52,31 +52,52 @@ const SimilarityEngine = (function() {
         return r;
     }
 
-    // --- Dynamic Symbol Builders ---
     function generateSymbol(complexity) {
         const baseTypes = ['circle', 'square', 'hexagon'];
         const baseType = baseTypes[Math.floor(Math.random() * baseTypes.length)];
         
+        const linesPool = [
+            { x1: -25, y1: -25, x2: 25, y2: 25 },
+            { x1: -25, y1: 25, x2: 25, y2: -25 },
+            { x1: -25, y1: 0, x2: 25, y2: 0 },
+            { x1: 0, y1: -25, x2: 0, y2: 25 }
+        ];
+        
+        const posPool = [
+            { x: 16, y: -16 },
+            { x: -16, y: -16 },
+            { x: 16, y: 16 },
+            { x: -16, y: 16 },
+            { x: 0, y: -18 },
+            { x: 0, y: 18 },
+            { x: -18, y: 0 },
+            { x: 18, y: 0 }
+        ];
+        
+        let shuffledLines = shuffle(linesPool);
+        let shuffledPos = shuffle(posPool);
+        
         let lines = [];
         let dot = null;
         let subShape = null;
-
-        lines.push({ x1: -25, y1: -25, x2: 25, y2: 25 });
         
         if (complexity === 'easy') {
-            lines.push({ x1: -25, y1: 25, x2: 25, y2: -25 });
-            dot = { x: 15, y: -15, r: 3.5 };
+            lines = shuffledLines.slice(0, 2);
+            dot = { x: shuffledPos[0].x, y: shuffledPos[0].y, r: 3.5 };
         } else if (complexity === 'medium') {
-            lines.push({ x1: -25, y1: 25, x2: 25, y2: -25 });
-            lines.push({ x1: -25, y1: 0, x2: 25, y2: 0 }); // Horizontal line
-            dot = { x: 0, y: -18, r: 3.5 };
-            subShape = { type: 'circle', x: -14, y: -14, size: 8 };
+            lines = shuffledLines.slice(0, Math.random() < 0.5 ? 2 : 3);
+            dot = { x: shuffledPos[0].x, y: shuffledPos[0].y, r: 3.5 };
+            
+            const subTypes = ['circle', 'square', 'triangle'];
+            const subType = subTypes[Math.floor(Math.random() * subTypes.length)];
+            subShape = { type: subType, x: shuffledPos[1].x, y: shuffledPos[1].y, size: 8 };
         } else { // hard
-            lines.push({ x1: -25, y1: 25, x2: 25, y2: -25 });
-            lines.push({ x1: -25, y1: 0, x2: 25, y2: 0 });
-            lines.push({ x1: 0, y1: -25, x2: 0, y2: 25 }); // Vertical line
-            dot = { x: 18, y: -18, r: 3.5 };
-            subShape = { type: 'triangle', x: -16, y: 16, size: 10 };
+            lines = shuffledLines.slice(0, Math.random() < 0.5 ? 3 : 4);
+            dot = { x: shuffledPos[0].x, y: shuffledPos[0].y, r: 3.5 };
+            
+            const subTypes = ['circle', 'square', 'triangle'];
+            const subType = subTypes[Math.floor(Math.random() * subTypes.length)];
+            subShape = { type: subType, x: shuffledPos[1].x, y: shuffledPos[1].y, size: 10 };
         }
 
         return {
@@ -299,6 +320,12 @@ const SimilarityEngine = (function() {
     function initGame() {
         if (!active) return;
         
+        const container = targetCanvas.parentNode;
+        if (container.clientWidth === 0 || container.clientHeight === 0) {
+            requestAnimationFrame(initGame);
+            return;
+        }
+        
         isAnswered = false;
         userPracticeAnswer = null;
         nextBtn.innerText = "ข้ามข้อนี้";
@@ -495,7 +522,7 @@ const SimilarityEngine = (function() {
         nextBtn.style.display = 'none';
         submitBtn.style.display = 'none';
         
-        window.showQuizResult('similarity', correct, maxQuizQ, quizTimerCount, historyDetails);
+        window.showQuizResult('similarity', correct, maxQuizQ, quizTimerCount, historyDetails, complexitySelect.value);
     }
 
     function toggleRunMode() {

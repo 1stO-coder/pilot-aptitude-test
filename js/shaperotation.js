@@ -509,6 +509,12 @@ const ShapeRotationEngine = (function() {
     function initGame() {
         if (!active) return;
         
+        const container = refCanvas.parentNode;
+        if (container.clientWidth === 0 || container.clientHeight === 0) {
+            requestAnimationFrame(initGame);
+            return;
+        }
+        
         isAnswered = false;
         userPracticeAnswer = null;
         nextBtn.innerText = "ข้ามข้อนี้";
@@ -723,7 +729,7 @@ const ShapeRotationEngine = (function() {
         nextBtn.style.display = 'none';
         submitBtn.style.display = 'none';
         
-        window.showQuizResult('shaperotation', correct, maxQuizQ, quizTimerCount, historyDetails);
+        window.showQuizResult('shaperotation', correct, maxQuizQ, quizTimerCount, historyDetails, difficultySelect.value);
     }
 
     function toggleRunMode() {

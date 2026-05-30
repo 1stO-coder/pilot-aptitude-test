@@ -18,8 +18,13 @@ function loadDB() {
         const data = localStorage.getItem(DB_KEY);
         if (data) {
             appState = JSON.parse(data);
+            if (!appState || typeof appState !== 'object') appState = DEFAULT_DB;
             // Ensure compatibility
-            if (!appState.sessions) appState.sessions = [];
+            if (!appState.sessions) {
+                appState.sessions = [];
+            } else {
+                appState.sessions = appState.sessions.filter(s => s !== null && s !== undefined);
+            }
             if (!appState.badges) appState.badges = [];
             if (appState.streakRecord === undefined) appState.streakRecord = 0;
         } else {
@@ -182,7 +187,7 @@ function checkAchievements(newSession) {
 // ROUTER & NAVIGATION CONTROLLER
 // ═══════════════════════════════════════════════
 
-const GAME_IDS = ['skyassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
+const GAME_IDS = ['skyassemble_assemble', 'skyassemble_disassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
 let activeView = "dashboard";
 
 function switchView(target) {
@@ -197,7 +202,8 @@ function switchView(target) {
     });
     
     document.querySelectorAll('.content-view').forEach(view => {
-        view.classList.toggle('active', view.id === `view-${target}`);
+        const viewId = (target === 'skyassemble_assemble' || target === 'skyassemble_disassemble') ? 'skyassemble' : target;
+        view.classList.toggle('active', view.id === `view-${viewId}`);
     });
     
     activeView = target;
@@ -212,7 +218,9 @@ function switchView(target) {
 }
 
 function stopActiveGame(gameId) {
-    if (gameId === 'skyassemble' && window.SkyAssembleEngine) window.SkyAssembleEngine.stop();
+    if ((gameId === 'skyassemble' || gameId === 'skyassemble_assemble' || gameId === 'skyassemble_disassemble') && window.SkyAssembleEngine) {
+        window.SkyAssembleEngine.stop();
+    }
     if (gameId === 'shaperotation' && window.ShapeRotationEngine) window.ShapeRotationEngine.stop();
     if (gameId === 'nback' && window.NBackEngine) window.NBackEngine.stop();
     if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.stop();
@@ -223,7 +231,9 @@ function stopActiveGame(gameId) {
 function startActiveGame(gameId) {
     // Slight delay to ensure canvas layouts are finalized (critical for iPad rendering!)
     setTimeout(() => {
-        if (gameId === 'skyassemble' && window.SkyAssembleEngine) window.SkyAssembleEngine.start();
+        if ((gameId === 'skyassemble' || gameId === 'skyassemble_assemble' || gameId === 'skyassemble_disassemble') && window.SkyAssembleEngine) {
+            window.SkyAssembleEngine.start(gameId);
+        }
         if (gameId === 'shaperotation' && window.ShapeRotationEngine) window.ShapeRotationEngine.start();
         if (gameId === 'nback' && window.NBackEngine) window.NBackEngine.start();
         if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.start();
@@ -233,8 +243,119 @@ function startActiveGame(gameId) {
 }
 
 // ═══════════════════════════════════════════════
-// DASHBOARD STATS RENDERER
+// DASHBOARD STATS RENDERER & SEGMENTATIONS
 // ═══════════════════════════════════════════════
+
+const GAME_DIFFICULTIES = {
+    'skyassemble_assemble': [
+        { key: '2', label: '2 ชิ้น (Starter)' },
+        { key: '3', label: '3 ชิ้น (Beginner)' },
+        { key: '4', label: '4 ชิ้น (Intermediate)' },
+        { key: '5', label: '5 ชิ้น (Advanced)' }
+    ],
+    'skyassemble_disassemble': [
+        { key: '2', label: '2 ชิ้น (Starter)' },
+        { key: '3', label: '3 ชิ้น (Beginner)' },
+        { key: '4', label: '4 ชิ้น (Intermediate)' },
+        { key: '5', label: '5 ชิ้น (Advanced)' }
+    ],
+    'shaperotation': [
+        { key: '5', label: '5 เหลี่ยม (Intermediate)' },
+        { key: '7', label: '7 เหลี่ยม (Advanced)' }
+    ],
+    'nback': [
+        { key: '1', label: '1-Back (ง่ายมาก)' },
+        { key: '2', label: '2-Back (ปานกลาง)' },
+        { key: '3', label: '3-Back (ยาก)' },
+        { key: '4', label: '4-Back (ระดับสูง)' }
+    ],
+    'hiddenimage': [
+        { key: '25', label: 'Starter (25 เส้น)' },
+        { key: '45', label: 'Intermediate (45 เส้น)' },
+        { key: '70', label: 'Advanced (70 เส้น)' }
+    ],
+    'similarity': [
+        { key: 'easy', label: 'Easy (3 องค์ประกอบ)' },
+        { key: 'medium', label: 'Medium (4 องค์ประกอบ)' },
+        { key: 'hard', label: 'Hard (5 องค์ประกอบ)' }
+    ],
+    'seriesnum': [
+        { key: 'easy', label: 'Easy (+/- คงที่)' },
+        { key: 'med', label: 'Medium (รูปแบบไขว้)' },
+        { key: 'hard', label: 'Hard (สมการกำลังสอง)' },
+        { key: 'vhard', label: 'Very Hard (Lucas/สูตร)' }
+    ]
+};
+
+function getSessionDifficulty(s) {
+    if (s.difficulty) return s.difficulty.toString();
+    if (s.gameId === 'skyassemble' || s.gameId === 'skyassemble_assemble' || s.gameId === 'skyassemble_disassemble') return '4';
+    if (s.gameId === 'shaperotation') return '5';
+    if (s.gameId === 'nback') return '2';
+    if (s.gameId === 'hiddenimage') return '45';
+    if (s.gameId === 'similarity') return 'medium';
+    if (s.gameId === 'seriesnum') return 'easy';
+    return null;
+}
+
+function getBestRecord(gameId, difficulty = null) {
+    const ss = appState.sessions || [];
+    const quizSessions = ss.filter(s => {
+        if (!s) return false;
+        if (s.gameId !== gameId || s.mode !== 'quiz') return false;
+        if (difficulty === null) return true;
+        return getSessionDifficulty(s) === difficulty.toString();
+    });
+    if (quizSessions.length === 0) return null;
+    
+    let bestSession = quizSessions[0];
+    quizSessions.forEach(s => {
+        if (s.pct > bestSession.pct || (s.pct === bestSession.pct && s.sec < bestSession.sec)) {
+            bestSession = s;
+        }
+    });
+    return bestSession;
+}
+
+function renderLobbyBestForEl(el, gid) {
+    const diffs = GAME_DIFFICULTIES[gid] || [];
+    let html = `🏆 <b>สถิติที่ดีที่สุด (Best Records by Difficulty):</b><div class="lobby-best-grid">`;
+    let hasAnyRecord = false;
+    
+    diffs.forEach(diff => {
+        const best = getBestRecord(gid, diff.key);
+        if (best) {
+            hasAnyRecord = true;
+            const m = Math.floor(best.sec / 60);
+            const s = best.sec % 60;
+            const timeStr = `${m}:${s.toString().padStart(2, '0')} นาที`;
+            html += `<div class="lobby-best-item">
+                <span class="lbi-diff-name">${diff.label}:</span> 
+                <span class="lbi-score">ถูก ${best.correct}/${best.total} (${best.pct}%)</span> · 
+                <span class="lbi-time">${timeStr}</span>
+            </div>`;
+        } else {
+            html += `<div class="lobby-best-item empty">
+                <span class="lbi-diff-name">${diff.label}:</span> 
+                <span class="lbi-score">ยังไม่มีสถิติ</span>
+            </div>`;
+        }
+    });
+    
+    html += `</div>`;
+    el.innerHTML = html;
+    
+    if (hasAnyRecord) {
+        el.style.color = '#00f2fe';
+        el.style.background = 'rgba(0, 242, 254, 0.03)';
+        el.style.borderColor = 'rgba(0, 242, 254, 0.15)';
+    } else {
+        el.style.color = 'var(--text-dim)';
+        el.style.background = 'rgba(255, 255, 255, 0.01)';
+        el.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+    }
+}
+window.renderLobbyBestForEl = renderLobbyBestForEl;
 
 function renderDashboard() {
     loadDB();
@@ -253,7 +374,7 @@ function renderDashboard() {
     
     // Update individual game modules
     GAME_IDS.forEach(gid => {
-        const gameSessions = ss.filter(s => s.gameId === gid);
+        const gameSessions = ss.filter(s => s && s.gameId === gid);
         const progressFill = document.getElementById(`progress-${gid}`);
         const statsLabel = document.getElementById(`stats-${gid}`);
         const bestEl = document.getElementById(`best-${gid}`);
@@ -263,7 +384,7 @@ function renderDashboard() {
             statsLabel.innerText = `เล่นแล้ว ${gameSessions.length} ครั้ง · Max ${maxAcc}%`;
             progressFill.style.width = `${maxAcc}%`;
             
-            const quizSessions = gameSessions.filter(s => s.mode === 'quiz');
+            const quizSessions = gameSessions.filter(s => s && s.mode === 'quiz');
             if (quizSessions.length > 0) {
                 let bestSession = quizSessions[0];
                 quizSessions.forEach(s => {
@@ -274,8 +395,15 @@ function renderDashboard() {
                 const m = Math.floor(bestSession.sec / 60);
                 const s = bestSession.sec % 60;
                 const timeStr = `${m}:${s.toString().padStart(2, '0')}`;
+                
+                // Get difficulty label
+                const sessionDiff = getSessionDifficulty(bestSession);
+                const diffList = GAME_DIFFICULTIES[gid] || [];
+                const diffObj = diffList.find(d => d.key === sessionDiff);
+                const diffLabel = diffObj ? diffObj.label.split(' ')[0] : 'ทั่วไป';
+                
                 if (bestEl) {
-                    bestEl.innerHTML = `🏆 สถิติดีที่สุด: ถูก ${bestSession.correct}/${bestSession.total} ข้อ (${bestSession.pct}%) · ${timeStr}`;
+                    bestEl.innerHTML = `🏆 สถิติดีที่สุด: ถูก ${bestSession.correct}/${bestSession.total} ข้อ (${bestSession.pct}%) · ${timeStr} [${diffLabel}]`;
                     bestEl.style.color = '#10b981';
                     bestEl.style.background = 'rgba(16, 185, 129, 0.06)';
                     bestEl.style.borderColor = 'rgba(16, 185, 129, 0.2)';
@@ -319,6 +447,8 @@ function renderDashboard() {
     // Render Flight Logs
     const GAME_NAMES = {
         'skyassemble': 'Shapes Puzzle (SkyAssemble)',
+        'skyassemble_assemble': 'Shapes Puzzle (Assembly)',
+        'skyassemble_disassemble': 'Shapes Puzzle (Disassembly)',
         'shaperotation': '2D Shape Rotation',
         'nback': 'Dual N-Back Protocol',
         'hiddenimage': 'Hidden Image Test',
@@ -328,14 +458,42 @@ function renderDashboard() {
     const logsBody = document.getElementById('db-flight-logs-body');
     if (logsBody) {
         logsBody.innerHTML = '';
-        const recentSessions = ss.slice(0, 20);
+        const recentSessions = ss.filter(s => s !== null && s !== undefined).slice(0, 20);
         if (recentSessions.length === 0) {
-            logsBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 15px; color: var(--text-dim);">ไม่มีบันทึกประวัติการฝึกซ้อม</td></tr>`;
+            for (let i = 0; i < 10; i++) {
+                const tr = document.createElement('tr');
+                tr.className = 'empty-row';
+                if (i === 0) {
+                    tr.innerHTML = `
+                        <td colspan="6" style="text-align: center; padding: 15px; color: var(--text-dim); font-style: italic;">ไม่มีบันทึกประวัติการฝึกซ้อม (No flight logs)</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                    `;
+                }
+                logsBody.appendChild(tr);
+            }
         } else {
             recentSessions.forEach(s => {
                 const tr = document.createElement('tr');
                 
-                const nameStr = GAME_NAMES[s.gameId] || s.gameId;
+                let nameStr = GAME_NAMES[s.gameId] || s.gameId;
+                const sessionDiff = getSessionDifficulty(s);
+                if (sessionDiff) {
+                    const diffList = GAME_DIFFICULTIES[s.gameId] || [];
+                    const diffObj = diffList.find(d => d.key === sessionDiff);
+                    if (diffObj) {
+                        const diffShort = diffObj.label.split(' ')[0];
+                        nameStr += ` (${diffShort})`;
+                    }
+                }
+                
                 const modeLabel = s.mode === 'quiz' ? '<span style="color: #fbbf24;">Exam (Quiz)</span>' : '<span style="color: #10b981;">Free Practice</span>';
                 const timeStr = `${Math.floor(s.sec / 60)}m ${s.sec % 60}s`;
                 
@@ -349,42 +507,36 @@ function renderDashboard() {
                 `;
                 logsBody.appendChild(tr);
             });
+            
+            // Pad with empty rows to always visually show 10 rows
+            const rowsCount = recentSessions.length;
+            if (rowsCount < 10) {
+                for (let i = rowsCount; i < 10; i++) {
+                    const tr = document.createElement('tr');
+                    tr.className = 'empty-row';
+                    tr.innerHTML = `
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                        <td style="color: rgba(255, 255, 255, 0.05); font-style: italic;">—</td>
+                    `;
+                    logsBody.appendChild(tr);
+                }
+            }
         }
     }
 }
 
 function updateLobbyBestRecords() {
     loadDB();
-    const ss = appState.sessions;
-    const GAME_IDS = ['skyassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
+    const OTHER_GAMES = ['shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
     
-    GAME_IDS.forEach(gid => {
-        const gameSessions = ss.filter(s => s.gameId === gid);
+    OTHER_GAMES.forEach(gid => {
         const lobbyBestEl = document.getElementById(`${gid}-lobby-best`);
-        
         if (lobbyBestEl) {
-            const quizSessions = gameSessions.filter(s => s.mode === 'quiz');
-            if (quizSessions.length > 0) {
-                let bestSession = quizSessions[0];
-                quizSessions.forEach(s => {
-                    if (s.pct > bestSession.pct || (s.pct === bestSession.pct && s.sec < bestSession.sec)) {
-                        bestSession = s;
-                    }
-                });
-                const m = Math.floor(bestSession.sec / 60);
-                const s = bestSession.sec % 60;
-                const timeStr = `${m}:${s.toString().padStart(2, '0')} นาที`;
-                
-                lobbyBestEl.innerHTML = `🏆 <b>สถิติที่ดีที่สุด (Best Record):</b> ถูก ${bestSession.correct}/${bestSession.total} ข้อ (${bestSession.pct}%) · เวลา ${timeStr}`;
-                lobbyBestEl.style.color = '#00f2fe';
-                lobbyBestEl.style.background = 'rgba(0, 242, 254, 0.05)';
-                lobbyBestEl.style.borderColor = 'rgba(0, 242, 254, 0.2)';
-            } else {
-                lobbyBestEl.innerHTML = `💡 <b>ยังไม่มีบันทึกสถิติแบบทดสอบจับเวลา</b> (ทำโหมดข้อสอบเพื่อบันทึกสถิติ)`;
-                lobbyBestEl.style.color = 'var(--text-dim)';
-                lobbyBestEl.style.background = 'rgba(255, 255, 255, 0.01)';
-                lobbyBestEl.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-            }
+            renderLobbyBestForEl(lobbyBestEl, gid);
         }
     });
 }
@@ -395,7 +547,7 @@ function updateLobbyBestRecords() {
 
 let activeQuizCallback = null;
 
-function showQuizResult(gameId, correct, total, seconds, history) {
+function showQuizResult(gameId, correct, total, seconds, history, difficulty = null, subType = null) {
     // Play sound
     playSound('correct');
     
@@ -455,7 +607,9 @@ function showQuizResult(gameId, correct, total, seconds, history) {
         correct,
         total,
         pct,
-        sec: seconds
+        sec: seconds,
+        difficulty,
+        subType
     };
     
     appState.sessions.unshift(newSession);
@@ -487,7 +641,9 @@ window.reviewQuestionItem = function(gameId, questionIdx) {
     // Hide modal
     document.getElementById('quiz-result-modal').classList.remove('active');
     
-    if (gameId === 'skyassemble' && window.SkyAssembleEngine) window.SkyAssembleEngine.review(questionIdx);
+    if ((gameId === 'skyassemble' || gameId === 'skyassemble_assemble' || gameId === 'skyassemble_disassemble') && window.SkyAssembleEngine) {
+        window.SkyAssembleEngine.review(questionIdx);
+    }
     if (gameId === 'shaperotation' && window.ShapeRotationEngine) window.ShapeRotationEngine.review(questionIdx);
     if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.review(questionIdx);
     if (gameId === 'similarity' && window.SimilarityEngine) window.SimilarityEngine.review(questionIdx);
@@ -558,7 +714,7 @@ document.addEventListener('keydown', (e) => {
         }
     }
     
-    if (activeView === 'skyassemble') routeKey(window.SkyAssembleEngine, e);
+    if ((activeView === 'skyassemble' || activeView === 'skyassemble_assemble' || activeView === 'skyassemble_disassemble')) routeKey(window.SkyAssembleEngine, e);
     else if (activeView === 'shaperotation') routeKey(window.ShapeRotationEngine, e);
     else if (activeView === 'hiddenimage') routeKey(window.HiddenImageEngine, e);
     else if (activeView === 'similarity') routeKey(window.SimilarityEngine, e);

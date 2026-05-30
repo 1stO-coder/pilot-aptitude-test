@@ -471,7 +471,7 @@ const SeriesNumEngine = (function() {
         });
         
         quizHistory = historyDetails;
-        window.showQuizResult('seriesnum', correct, 20, secondsSpent, historyDetails);
+        window.showQuizResult('seriesnum', correct, 20, secondsSpent, historyDetails, difficultySelect.value);
     }
 
     // Review logic

@@ -397,7 +397,7 @@ const HiddenImageEngine = (function() {
         nextBtn.className = "btn-action";
         
         const dims = { w: canvas.parentNode.clientWidth, h: canvas.parentNode.clientHeight };
-        if (dims.w === 0) {
+        if (dims.w === 0 || dims.h === 0) {
             requestAnimationFrame(initGame);
             return;
         }
@@ -602,7 +602,7 @@ const HiddenImageEngine = (function() {
         nextBtn.style.display = 'none';
         submitBtn.style.display = 'none';
         
-        window.showQuizResult('hiddenimage', correct, maxQuizQ, quizTimerCount, historyDetails);
+        window.showQuizResult('hiddenimage', correct, maxQuizQ, quizTimerCount, historyDetails, densitySelect.value);
     }
 
     function toggleRunMode() {

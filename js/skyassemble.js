@@ -11,6 +11,7 @@ const SkyAssembleEngine = (function() {
     
     let gameData = { baseShape: [], options: [], missionPacked: null, correctIndex: 0, mode: 'assemble' };
     let userPracticeAnswer = null; // Add user practice answer tracking
+    let currentGameId = 'skyassemble_assemble';
     
     // Quiz State
     let isQuizMode = false;
@@ -495,7 +496,7 @@ const SkyAssembleEngine = (function() {
         let activeMode = reqMode;
         
         const container = canvas.parentNode;
-        if (container.clientWidth === 0) {
+        if (container.clientWidth === 0 || container.clientHeight === 0) {
             requestAnimationFrame(initGame);
             return;
         }
@@ -742,7 +743,8 @@ const SkyAssembleEngine = (function() {
         nextBtn.style.display = 'none';
         submitBtn.style.display = 'none';
         
-        window.showQuizResult('skyassemble', correct, maxQuizQ, quizTimer, historyDetails);
+        const pieceCount = pieceCountSelect.value;
+        window.showQuizResult(currentGameId, correct, maxQuizQ, quizTimer, historyDetails, pieceCount);
     }
 
     function toggleRunMode() {
@@ -984,9 +986,44 @@ const SkyAssembleEngine = (function() {
     }
 
     return {
-        start: function() {
+        start: function(gameId = 'skyassemble_assemble') {
             active = true;
             isReviewMode = false;
+            currentGameId = gameId;
+            
+            const isDis = (gameId === 'skyassemble_disassemble');
+            const targetMode = isDis ? 'disassemble' : 'assemble';
+            
+            if (gameModeSelect) {
+                gameModeSelect.value = targetMode;
+                gameModeSelect.style.display = 'none';
+            }
+            
+            const lobbyModeSelect = document.getElementById('lobby-sky-game-mode');
+            if (lobbyModeSelect) {
+                lobbyModeSelect.value = targetMode;
+                if (lobbyModeSelect.parentNode) {
+                    lobbyModeSelect.parentNode.style.display = 'none';
+                }
+            }
+            
+            // Update lobby labels dynamically with safe guards
+            const lobbyH2 = document.querySelector('#skyassemble-lobby h2');
+            if (lobbyH2) {
+                lobbyH2.innerText = isDis ? '🧩 Shapes Puzzle (Disassembly)' : '🧩 Shapes Puzzle (Assembly)';
+            }
+            const lobbyDesc = document.querySelector('#skyassemble-lobby .lobby-desc');
+            if (lobbyDesc) {
+                lobbyDesc.innerText = isDis ? 
+                    'แยกแยะรูปทรงหลักออกเป็นชิ้นส่วนย่อยเพื่อฝึกการวิเคราะห์มิติสัมพันธ์' : 
+                    'ประกอบชิ้นส่วนย่อยให้กลายเป็นรูปทรงหลักเพื่อฝึกการรับรู้มิติทรงกลมและพื้นที่';
+            }
+            
+            // Render lobby records
+            const lobbyBestEl = document.getElementById('skyassemble-lobby-best');
+            if (lobbyBestEl && typeof window.renderLobbyBestForEl === 'function') {
+                window.renderLobbyBestForEl(lobbyBestEl, gameId);
+            }
             
             document.getElementById('skyassemble-lobby').style.display = 'flex';
             document.getElementById('skyassemble-stage').style.display = 'none';
@@ -997,7 +1034,6 @@ const SkyAssembleEngine = (function() {
                 const selectedMode = activeModeCard ? activeModeCard.dataset.mode : 'practice';
                 
                 runModeSelect.value = selectedMode;
-                gameModeSelect.value = document.getElementById('lobby-sky-game-mode').value;
                 pieceCountSelect.value = document.getElementById('lobby-sky-piece-count').value;
                 
                 document.getElementById('skyassemble-lobby').style.display = 'none';

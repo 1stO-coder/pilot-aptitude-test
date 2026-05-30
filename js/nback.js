@@ -321,7 +321,7 @@ const NBackEngine = (function() {
             { type: `Audio match`, isCorrect: hits.aud >= misses.aud, timeTaken: 0 }
         ];
 
-        window.showQuizResult('nback', totalCorrect, totalAnswers || 1, elapsed, historyDetails);
+        window.showQuizResult('nback', totalCorrect, totalAnswers || 1, elapsed, historyDetails, N);
         resetToBio();
     }
 

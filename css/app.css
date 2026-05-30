@@ -229,11 +229,14 @@ body, html {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
-    height: 480px;
+    height: 450px !important;
+    min-height: 450px !important;
+    max-height: 450px !important;
     overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    flex-shrink: 0 !important;
 }
 
 .flight-logs-table {
@@ -1735,5 +1738,48 @@ select:focus {
     background-color: rgba(59, 130, 246, 0.1) !important;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.2) !important;
 }
+
+/* Lobby Best Record Segmentations */
+.lobby-best-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    text-align: left;
+}
+
+.lobby-best-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.lobby-best-item.empty {
+    opacity: 0.45;
+}
+
+.lbi-diff-name {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.lbi-score {
+    color: var(--accent);
+    font-family: var(--font-mono);
+}
+
+.lbi-time {
+    color: var(--amber);
+    font-family: var(--font-mono);
+}
+
+#view-dashboard.active {
+    display: block;
+}
+
 
 
