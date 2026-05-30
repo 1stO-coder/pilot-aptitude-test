@@ -1862,9 +1862,9 @@ select:focus {
 .numestimate-qcard-text {
     background: rgba(0, 0, 0, 0.18);
     border-radius: 10px;
-    padding: 18px 15px;
+    padding: 12px 15px;
     margin-bottom: 15px;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-main);
     line-height: 1.4;

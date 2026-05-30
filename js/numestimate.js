@@ -950,6 +950,17 @@ const NumEstimateEngine = (function() {
                         
                         window.playSound('beep');
                         updateQuizNavigator();
+
+                        // Auto scroll to next unanswered card
+                        for (let i = idx + 1; i < questionsList.length; i++) {
+                            if (questionsList[i].picked === null) {
+                                setTimeout(() => {
+                                    const nextCard = document.getElementById(`numestimate-qcard-${i}`);
+                                    if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }, 240);
+                                break;
+                            }
+                        }
                     };
                 }
                 
