@@ -112,7 +112,7 @@ const NumEstimateEngine = (function() {
         }
         
         let choicesArray = Array.from(choiceSet).slice(0, 5);
-        choicesArray = shuffle(choicesArray);
+        choicesArray.sort((a, b) => a - b);
         
         let correctIdx = choicesArray.indexOf(correctVal);
         
