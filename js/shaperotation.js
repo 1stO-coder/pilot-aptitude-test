@@ -64,7 +64,7 @@ const ShapeRotationEngine = (function() {
 
     // --- Diverse Asymmetric Polygon Generator ---
     function generateDiversePolygon(numVertices, size = 32) {
-        const type = rnd(1, 10);
+        const type = rnd(1, 16);
         let pts = [];
         if (type === 1) {
             // L-Shape Block
@@ -203,7 +203,7 @@ const ShapeRotationEngine = (function() {
             if (numVertices < pts.length) {
                 pts = pts.slice(0, numVertices);
             }
-        } else {
+        } else if (type === 10) {
             // Original radial jittered polygon
             let angleStep = (Math.PI * 2) / numVertices;
             for (let i = 0; i < numVertices; i++) {
@@ -211,6 +211,50 @@ const ShapeRotationEngine = (function() {
                 let radius = size * (0.6 + Math.random() * 0.7);
                 pts.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
             }
+        } else if (type === 11) {
+            // 5-Point Star
+            for (let i = 0; i < 10; i++) {
+                let angle = (i * Math.PI) / 5 - Math.PI / 2;
+                let r = (i % 2 === 0) ? size * 1.25 : size * 0.45;
+                pts.push([Math.cos(angle) * r, Math.sin(angle) * r]);
+            }
+        } else if (type === 12) {
+            // Cross / Plus
+            let w = size * 0.35;
+            let h = size * 1.1;
+            pts = [
+                [-w, -h], [w, -h], [w, -w], [h, -w], [h, w], [w, w],
+                [w, h], [-w, h], [-w, w], [-h, w], [-h, -w], [-w, -w]
+            ];
+        } else if (type === 13) {
+            // Crescent Moon
+            for (let i = 0; i <= 8; i++) {
+                let angle = -Math.PI/2 + (i / 8) * Math.PI;
+                pts.push([Math.cos(angle) * size, Math.sin(angle) * size]);
+            }
+            for (let i = 8; i >= 0; i--) {
+                let angle = -Math.PI/2 + (i / 8) * Math.PI;
+                pts.push([Math.cos(angle) * size * 0.6 + size * 0.4, Math.sin(angle) * size * 0.6]);
+            }
+        } else if (type === 14) {
+            // Heart
+            for (let angle = 0; angle < Math.PI * 2; angle += 0.5) {
+                let x = 16 * Math.pow(Math.sin(angle), 3);
+                let y = -(13 * Math.cos(angle) - 5 * Math.cos(2*angle) - 2 * Math.cos(3*angle) - Math.cos(4*angle));
+                pts.push([x * (size / 15), y * (size / 15)]);
+            }
+        } else if (type === 15) {
+            // Shield
+            pts = [
+                [-size, -size * 0.8], [size, -size * 0.8], [size, size * 0.2], 
+                [0, size * 1.2], [-size, size * 0.2]
+            ];
+        } else {
+            // Hourglass
+            pts = [
+                [-size, -size], [size, -size], [size * 0.25, 0], 
+                [size, size], [-size, size], [-size * 0.25, 0]
+            ];
         }
         
         // Add random slight jitter to all vertices to ensure uniqueness
@@ -442,8 +486,11 @@ const ShapeRotationEngine = (function() {
                 
                 if (isReviewMode) {
                     const q = quizQuestions[currentQIndex];
-                    if (idx === correctOptionIndex) isHighlightedCorrect = true;
-                    if (idx === q.userAnswer) isHighlightedSelected = true;
+                    if (idx === correctOptionIndex) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === q.userAnswer) {
+                        isHighlightedWrong = true;
+                    }
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
@@ -832,6 +879,7 @@ const ShapeRotationEngine = (function() {
         const item = quizQuestions[historyIndex];
         if (!item) return;
 
+        currentQIndex = historyIndex;
         isReviewMode = true;
         isQuizMode = false;
         isAnswered = true;

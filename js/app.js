@@ -283,7 +283,8 @@ const GAME_DIFFICULTIES = {
         { key: 'easy', label: 'Easy (+/- คงที่)' },
         { key: 'med', label: 'Medium (รูปแบบไขว้)' },
         { key: 'hard', label: 'Hard (สมการกำลังสอง)' },
-        { key: 'vhard', label: 'Very Hard (Lucas/สูตร)' }
+        { key: 'vhard', label: 'Very Hard (Lucas/สูตร)' },
+        { key: 'competition', label: 'แข่งขันจริง (ผสมระดับความยาก)' }
     ]
 };
 

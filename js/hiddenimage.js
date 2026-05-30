@@ -292,7 +292,7 @@ const HiddenImageEngine = (function() {
 
     function drawOptions() {
         optionsGrid.innerHTML = '';
-        const userChoice = isQuizMode && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
+        const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
         
         optionsList.forEach((opt, idx) => {
             const card = document.createElement('div');
@@ -341,8 +341,11 @@ const HiddenImageEngine = (function() {
                 let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
-                    if (idx === correctOptionIndex) isHighlightedCorrect = true;
-                    if (idx === userChoice) isHighlightedSelected = true;
+                    if (idx === correctOptionIndex) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userChoice) {
+                        isHighlightedWrong = true;
+                    }
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
@@ -698,6 +701,7 @@ const HiddenImageEngine = (function() {
         const item = quizQuestions[historyIndex];
         if (!item) return;
 
+        currentQIndex = historyIndex;
         isReviewMode = true;
         isQuizMode = false;
         isAnswered = true;

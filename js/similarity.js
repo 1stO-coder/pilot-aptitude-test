@@ -18,7 +18,7 @@ const SimilarityEngine = (function() {
     // Quiz State
     let isQuizMode = false;
     let quizQCount = 1;
-    let maxQuizQ = 20;
+    let maxQuizQ = 40;
     let quizQuestions = []; // Cached questions list
     let currentQIndex = 0;
     let quizTimerCount = 0;
@@ -259,7 +259,7 @@ const SimilarityEngine = (function() {
 
     function drawOptions() {
         choicesGrid.innerHTML = '';
-        const userChoice = isQuizMode && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
+        const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
         
         optionsList.forEach((opt, idx) => {
             const card = document.createElement('div');
@@ -300,8 +300,11 @@ const SimilarityEngine = (function() {
                 let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
-                    if (idx === correctOptionIndex) isHighlightedCorrect = true;
-                    if (idx === userChoice) isHighlightedSelected = true;
+                    if (idx === correctOptionIndex) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userChoice) {
+                        isHighlightedWrong = true;
+                    }
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
@@ -613,6 +616,7 @@ const SimilarityEngine = (function() {
         const item = quizQuestions[historyIndex];
         if (!item) return;
 
+        currentQIndex = historyIndex;
         isReviewMode = true;
         isQuizMode = false;
         isAnswered = true;

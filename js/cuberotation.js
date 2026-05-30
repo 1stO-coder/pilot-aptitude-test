@@ -289,7 +289,7 @@ const CubeRotationEngine = (function() {
             ctx.closePath();
             
             // Highlight the "X" face
-            const userChoice = isQuizMode && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
+            const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
             
             // Show X: before animation starts (initial phase), on answer reveal, or in review
             const isInitialPhase = !isAnimating && sequenceIndex === 0 && (activeCommand === "READY" || activeCommand === "GET READY...");
@@ -301,6 +301,10 @@ const CubeRotationEngine = (function() {
                 ctx.fillStyle = "rgba(16, 185, 129, 0.25)";
                 ctx.strokeStyle = "#10b981";
                 ctx.lineWidth = 3;
+            } else if (isReviewMode && userChoice === f.name) {
+                ctx.fillStyle = "rgba(244, 63, 94, 0.15)";
+                ctx.strokeStyle = "#f43f5e";
+                ctx.lineWidth = 2.5;
             } else if (isQuizMode && userChoice === f.name) {
                 ctx.fillStyle = "rgba(59, 130, 246, 0.15)";
                 ctx.strokeStyle = "#3b82f6";
@@ -318,7 +322,7 @@ const CubeRotationEngine = (function() {
             const fy = f.indices.reduce((sum, idx) => sum + projected[idx].y, 0) / 4;
             
             ctx.font = 'bold 10px JetBrains Mono, sans-serif';
-            ctx.fillStyle = shouldShowX ? "#10b981" : (isQuizMode && userChoice === f.name ? "#93c5fd" : "rgba(0, 242, 254, 0.6)");
+            ctx.fillStyle = shouldShowX ? "#10b981" : (isReviewMode && userChoice === f.name ? "#f43f5e" : (isQuizMode && userChoice === f.name ? "#93c5fd" : "rgba(0, 242, 254, 0.6)"));
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(f.name, fx, fy);
@@ -794,6 +798,7 @@ const CubeRotationEngine = (function() {
         const item = quizQuestions[historyIndex];
         if (!item) return;
 
+        currentQIndex = historyIndex;
         isReviewMode = true;
         isAnswered = true;
         isQuizMode = false;

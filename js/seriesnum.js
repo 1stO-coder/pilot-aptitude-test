@@ -22,8 +22,8 @@ const SeriesNumEngine = (function() {
     const difficultyVal = document.getElementById('series-difficulty-val');
     const modeTag = document.getElementById('series-mode-tag');
 
-    const LV_NAME = { easy: 'ง่าย', med: 'ปานกลาง', hard: 'ยาก', vhard: 'ยากมาก' };
-    const LV_HEX = { easy: '#00c896', med: '#3da5ff', hard: '#ffaa3b', vhard: '#ff6060' };
+    const LV_NAME = { easy: 'ง่าย', med: 'ปานกลาง', hard: 'ยาก', vhard: 'ยากมาก', competition: 'แข่งขันจริง' };
+    const LV_HEX = { easy: '#00c896', med: '#3da5ff', hard: '#ffaa3b', vhard: '#ff6060', competition: '#a855f7' };
 
     // Helper functions
     const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
@@ -119,6 +119,15 @@ const SeriesNumEngine = (function() {
                     s.push(v);
                 }
                 return ok(s) ? { seq: s, rule: `×1.5 ทุกตัว`, explain: `${s[0]} × 1.5 = ${s[1]}, ${s[1]} × 1.5 = ${s[2]} ... (คูณ 3 แล้วหาร 2)` } : null;
+            },
+            () => {
+                const a = rnd(3, 12), b = rnd(1, a - 1), st = rnd(10, 40), n = 7, s = [st];
+                for (let i = 1; i < n; i++) s.push(s[i - 1] + (i % 2 === 1 ? a : -b));
+                return ok(s) ? { seq: s, rule: `สลับ +${a} และ -${b}`, explain: `เริ่มต้นด้วย ${st} สลับบวกด้วย ${a} และลบด้วย ${b} ไปเรื่อยๆ: ${s.join(' → ')}` } : null;
+            },
+            () => {
+                const c = rnd(1, 5), st = rnd(1, 4), n = 6, s = Array.from({length: n}, (_, i) => Math.pow(st + i, 2) + c);
+                return ok(s) ? { seq: s, rule: `n² + ${c}`, explain: `กำลังสองบวกค่าคงที่ ${c}: ${st}²+${c}=${s[0]}, ${st+1}²+${c}=${s[1]}... ไปเรื่อยๆ` } : null;
             }
         ],
         hard: [
@@ -137,6 +146,31 @@ const SeriesNumEngine = (function() {
             () => {
                 const c = rnd(1, 4), n = 7, s = Array.from({length: n}, (_, i) => Math.pow(2, i + 1) + c);
                 return ok(s) ? { seq: s, rule: `2ⁿ + ${c}`, explain: `2¹+${c}=${s[0]}, 2²+${c}=${s[1]}, 2³+${c}=${s[2]} ... อนุกรมแบบทวีคูณบวกค่าคงที่` } : null;
+            },
+            () => {
+                const st = rnd(1, 10), n = 7, s = [st];
+                let add = rnd(2, 5);
+                for (let i = 1; i < n; i++) { s.push(s[i - 1] + add); add++; }
+                const diffs = s.slice(1).map((v, idx) => v - s[idx]);
+                return ok(s) ? { seq: s, rule: `บวกเพิ่มด้วยค่าเรียงลำดับ`, explain: `บวกเพิ่มด้วยค่าที่เพิ่มขึ้นทีละ 1: ${s[0]} (+${diffs[0]}) → ${s[1]} (+${diffs[1]}) → ${s[2]}...` } : null;
+            },
+            () => {
+                const c = rnd(1, 4), n = 5, s = Array.from({length: n}, (_, i) => Math.pow(3, i + 1) + c);
+                return ok(s) ? { seq: s, rule: `3ⁿ + ${c}`, explain: `เลขยกกำลังฐานสามบวกค่าคงที่: 3¹+${c}=${s[0]}, 3²+${c}=${s[1]}, 3³+${c}=${s[2]}...` } : null;
+            },
+            () => {
+                const a = rnd(2, 6), n = 6, s = [a * 3];
+                for (let i = 1; i < n; i++) {
+                    s.push(i % 2 === 1 ? s[i - 1] * 2 : Math.floor(s[i - 1] / 3));
+                }
+                return ok(s) ? { seq: s, rule: `สลับ ×2 และ ÷3`, explain: `ทำสลับกัน: คูณ 2 แล้วหารด้วย 3: ${s.join(' → ')}` } : null;
+            },
+            () => {
+                const c = rnd(1, 10), st = rnd(1, 4), n = 6, s = Array.from({length: n}, (_, i) => {
+                    const v = st + i;
+                    return v * v + v + c;
+                });
+                return ok(s) ? { seq: s, rule: `n² + n + ${c}`, explain: `อนุกรมพหุนาม (n²+n+${c}) สำหรับ n = ${st}, ${st+1}...: ${s.join(' → ')}` } : null;
             }
         ],
         vhard: [
@@ -155,27 +189,68 @@ const SeriesNumEngine = (function() {
                 const c = rnd(2, 5), a = rnd(c + 1, 10), n = 6, s = [a];
                 for (let i = 1; i < n; i++) s.push(s[i - 1] * 3 - c);
                 return ok(s) ? { seq: s, rule: `×3 แล้วลบ ${c}`, explain: `${s[0]}×3-${c}=${s[1]}, ${s[1]}×3-${c}=${s[2]}, ... ค่าก่อนหน้าคูณ 3 ลบด้วย ${c}` } : null;
+            },
+            () => {
+                const a = rnd(1, 2), b = rnd(1, 2), c = rnd(1, 2), d = rnd(1, 2), n = 8, s = [a, b, c, d];
+                for (let i = 4; i < n; i++) s.push(s[i - 1] + s[i - 2] + s[i - 3] + s[i - 4]);
+                return ok(s) ? { seq: s, rule: `ผลรวม 4 ตัวก่อนหน้า`, explain: `ตัวถัดไปคือผลบวกของ 4 ตัวแรกก่อนหน้าสะสม: ${s.join(' → ')}` } : null;
+            },
+            () => {
+                const st = rnd(2, 8), n = 6, s = [st];
+                for (let i = 1; i < n; i++) {
+                    s.push(i % 2 === 1 ? s[i - 1] + i : s[i - 1] * 2);
+                }
+                return ok(s) ? { seq: s, rule: `บวกเพิ่มสลับกับคูณ 2`, explain: `ขั้นตอนคือบวกตามลำดับดัชนีสลับกับคูณ 2: ${s.join(' → ')}` } : null;
+            },
+            () => {
+                const a = rnd(2, 10), b = rnd(15, 30);
+                const d1 = rnd(2, 6), d2 = rnd(3, 8);
+                const n = 8, s = [];
+                for (let i = 0; i < n; i++) {
+                    if (i % 2 === 0) {
+                        s.push(a + (i / 2) * d1);
+                    } else {
+                        s.push(b + Math.floor(i / 2) * d2);
+                    }
+                }
+                return ok(s) ? { seq: s, rule: `อนุกรมสลับคู่อันดับ (+${d1} และ +${d2})`, explain: `สลับกันสองอนุกรม: ชุดคี่บวกทีละ ${d1} (${s[0]}, ${s[2]}...), ชุดคู่บวกทีละ ${d2} (${s[1]}, ${s[3]}...)` } : null;
+            },
+            () => {
+                const a = rnd(1, 4), b = rnd(5, 15);
+                const d = rnd(3, 8);
+                const n = 8, s = [];
+                for (let i = 0; i < n; i++) {
+                    if (i % 2 === 0) {
+                        s.push(a * Math.pow(2, i / 2));
+                    } else {
+                        s.push(b + Math.floor(i / 2) * d);
+                    }
+                }
+                return ok(s) ? { seq: s, rule: `อนุกรมควบสลับกัน (ชุดแรก ×2, ชุดสอง +${d})`, explain: `สลับกันสองอนุกรม: ชุดคี่คูณทีละ 2 (${s[0]}, ${s[2]}...), ชุดคู่บวกทีละ ${d} (${s[1]}, ${s[3]}...)` } : null;
             }
         ]
     };
 
-    function generateQuestions(level, count = 20) {
+    function generateQuestionsForLevel(level, count) {
         const pool = P[level];
-        const usedRules = new Set();
+        const usedSequences = new Set();
         const results = [];
         let attempts = 0;
         
         const indices = shuffle([...Array(pool.length).keys()]);
         let cur = 0;
         
-        while (results.length < count && attempts < 400) {
+        while (results.length < count && attempts < 500) {
             attempts++;
             const pi = indices[cur % indices.length];
             cur++;
             
             const r = pool[pi]();
-            if (!r || usedRules.has(r.rule)) continue;
-            usedRules.add(r.rule);
+            if (!r) continue;
+            
+            const seqStr = r.seq.join(',');
+            if (usedSequences.has(seqStr)) continue;
+            usedSequences.add(seqStr);
             
             const answer = r.seq[r.seq.length - 1];
             const display = r.seq.slice(0, -1);
@@ -207,10 +282,30 @@ const SeriesNumEngine = (function() {
                 choices: shuffle([answer, ...Array.from(dist).slice(0, 3)]),
                 rule: r.rule,
                 explain: r.explain,
-                picked: null
+                picked: null,
+                difficulty: level
             });
         }
         return results;
+    }
+
+    function generateQuestions(level, count = 20) {
+        if (level === 'competition') {
+            const levels = ['easy', 'med', 'hard', 'vhard'];
+            const parts = [
+                Math.floor(count / 4),
+                Math.floor(count / 4),
+                Math.floor(count / 4),
+                count - 3 * Math.floor(count / 4)
+            ];
+            const allQuestions = [];
+            levels.forEach((lv, idx) => {
+                allQuestions.push(...generateQuestionsForLevel(lv, parts[idx]));
+            });
+            return shuffle(allQuestions);
+        } else {
+            return generateQuestionsForLevel(level, count);
+        }
     }
 
     // --- GUI Renders ---
@@ -236,7 +331,7 @@ const SeriesNumEngine = (function() {
                 card.innerHTML = `
                     <div class="series-q-header">
                         <span class="series-q-no">คำถามข้อที่ #${String(qi+1).padStart(2, '0')}</span>
-                        <span class="series-q-lbl" style="color: ${LV_HEX[difficultySelect.value]}">${LV_NAME[difficultySelect.value]}</span>
+                        <span class="series-q-lbl" style="color: ${LV_HEX[q.difficulty || difficultySelect.value]}">${LV_NAME[q.difficulty || difficultySelect.value]}</span>
                     </div>
                     <div class="series-display">${seriesHtml}</div>
                     <div class="series-choices-grid">${choicesHtml}</div>
@@ -271,7 +366,7 @@ const SeriesNumEngine = (function() {
             card.innerHTML = `
                 <div class="series-q-header">
                     <span class="series-q-no">ฝึกฝนทักษะตรรกะตัวเลข</span>
-                    <span class="series-q-lbl" style="color: ${LV_HEX[difficultySelect.value]}">${LV_NAME[difficultySelect.value]}</span>
+                    <span class="series-q-lbl" style="color: ${LV_HEX[q.difficulty || difficultySelect.value]}">${LV_NAME[q.difficulty || difficultySelect.value]}</span>
                 </div>
                 <div class="series-display">${seriesHtml}</div>
                 <div class="series-choices-grid">${choicesHtml}</div>
@@ -510,7 +605,7 @@ const SeriesNumEngine = (function() {
         card.innerHTML = `
             <div class="series-q-header">
                 <span class="series-q-no">เฉลยพร้อมวิจารณ์คำถาม</span>
-                <span class="series-q-lbl" style="color: ${LV_HEX[difficultySelect.value]}">${LV_NAME[difficultySelect.value]}</span>
+                <span class="series-q-lbl" style="color: ${LV_HEX[q.difficulty || difficultySelect.value]}">${LV_NAME[q.difficulty || difficultySelect.value]}</span>
             </div>
             <div class="series-display">${seriesHtml}</div>
             <div class="series-choices-grid">${choicesHtml}</div>

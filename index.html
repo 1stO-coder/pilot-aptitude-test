@@ -675,7 +675,7 @@
                             <div class="lobby-mode-card" data-mode="quiz">
                                 <span class="mode-icon">⏱️</span>
                                 <h4>แบบทดสอบจับเวลา</h4>
-                                <p>การประเมินทักษะเชิงลึก 20 ข้อจำกัดเวลาด่วน เพื่อทดสอบความถูกต้องระดับศูนย์ความบกพร่อง</p>
+                                <p>การประเมินทักษะเชิงลึก 40 ข้อจำกัดเวลาด่วน เพื่อทดสอบความถูกต้องระดับศูนย์ความบกพร่อง</p>
                             </div>
                         </div>
 
@@ -703,7 +703,7 @@
                         <div class="game-stats">
                             <div class="g-stat"><span class="gs-val" id="sim-score">0</span><span class="gs-label">Score</span></div>
                             <div class="g-stat"><span class="gs-val" id="sim-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
-                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="sim-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="sim-quest">1/40</span><span class="gs-label">Quest</span></div>
                             <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="sim-timer">00:00</span><span class="gs-label">Time</span></div>
                         </div>
                     </header>
@@ -735,7 +735,7 @@
                         <div class="btn-group">
                             <select id="sim-run-mode">
                                 <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
-                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 40 ข้อ)</option>
                             </select>
                             <select id="sim-complexity">
                                 <option value="easy">ความละเอียดธรรมดา (3 องค์ประกอบ)</option>
@@ -782,6 +782,7 @@
                                     <option value="med">ระดับปานกลาง (รูปแบบไขว้, สลับกฎ)</option>
                                     <option value="hard">ระดับยาก (สมการกำลังสอง, เลขคี่)</option>
                                     <option value="vhard">ระดับยากมาก (Lucas/สูตรทริปเปิ้ล)</option>
+                                    <option value="competition">แข่งขันจริง (สลับระดับความยากผสมกัน)</option>
                                 </select>
                             </div>
                         </div>
@@ -826,6 +827,7 @@
                                 <option value="med">ระดับปานกลาง (รูปแบบไขว้, สลับกฎ)</option>
                                 <option value="hard">ระดับยาก (สมการกำลังสอง, เลขคี่)</option>
                                 <option value="vhard">ระดับยากมาก (Lucas/สูตรทริปเปิ้ล)</option>
+                                <option value="competition">แข่งขันจริง (สลับระดับความยากผสมกัน)</option>
                             </select>
                         </div>
                         <button class="btn-action primary" id="series-next-btn" style="display:none;">ข้อถัดไป</button>

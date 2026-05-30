@@ -51,6 +51,15 @@ const SkyAssembleEngine = (function() {
             pts.push([-r, 0]); // close the diameter chord
             return pts;
         };
+        const createSector = (r, startAngle, endAngle, steps = 12) => {
+            let pts = [[0, 0]];
+            let step = (endAngle - startAngle) / steps;
+            for (let i = 0; i <= steps; i++) {
+                let a = startAngle + i * step;
+                pts.push([Math.cos(a)*r, Math.sin(a)*r]);
+            }
+            return pts;
+        };
 
         return [
             [[-40,-40], [40,-40], [40,40], [-40,40]], // 0. Square
@@ -66,7 +75,11 @@ const SkyAssembleEngine = (function() {
             [[0,-40], [40,35], [-40,35]],             // 10. Isosceles Triangle
             [[-35, -25], [-35, 25], [35, 25]],        // 11. Right Triangle
             createHalfCircle(40),                     // 12. Half-circle
-            [[-20,-35], [20,-35], [40,5], [0,38], [-40,5]] // 13. House/Pentagon (Convex)
+            [[-20,-35], [20,-35], [40,5], [0,38], [-40,5]], // 13. House/Pentagon (Convex)
+            [[0,-42], [36,21], [-36,21]],             // 14. Equilateral Triangle
+            Array.from({length:7}, (_, i) => [Math.cos(i*Math.PI*2/7)*42, Math.sin(i*Math.PI*2/7)*42]), // 15. Heptagon
+            createSector(42, -Math.PI/4, Math.PI/4),   // 16. Pie Sector (90 degrees)
+            [[0,-45], [30,-10], [0,45], [-30,-10]]    // 17. Convex Kite
         ];
     }
 
@@ -351,7 +364,7 @@ const SkyAssembleEngine = (function() {
         grid.innerHTML = '';
         const showLines = linesToggle.querySelector('input').checked;
         const activeMode = gameData.mode;
-        const userChoice = isQuizMode && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
+        const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
 
         gameData.options.forEach((opt, idx) => {
             const card = document.createElement('div'); 
@@ -398,8 +411,11 @@ const SkyAssembleEngine = (function() {
                 let isHighlightedWrong = false;
                 
                 if (isReviewMode) {
-                    if (opt.isCorrect) isHighlightedCorrect = true;
-                    if (idx === userChoice) isHighlightedSelected = true;
+                    if (opt.isCorrect) {
+                        isHighlightedCorrect = true;
+                    } else if (idx === userChoice) {
+                        isHighlightedWrong = true;
+                    }
                 } else if (isQuizMode) {
                     if (idx === userChoice) isHighlightedSelected = true;
                 } else if (isAnswered) {
@@ -887,6 +903,7 @@ const SkyAssembleEngine = (function() {
         const item = quizQuestions[historyIndex];
         if (!item) return;
 
+        currentQIndex = historyIndex;
         isReviewMode = true;
         isQuizMode = false;
         isAnswered = true;
