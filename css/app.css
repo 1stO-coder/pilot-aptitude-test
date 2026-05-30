@@ -1796,19 +1796,25 @@ select:focus {
 }
 
 .option-card.estimate-card {
-    height: 90px;
+    height: 45px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 15px;
+    padding: 10px;
     box-sizing: border-box;
 }
 
 .option-card.estimate-card .option-text-val {
-    font-size: 20px;
+    font-size: 14px;
     font-weight: 700;
     color: #fff;
     font-family: 'Outfit', sans-serif;
+}
+
+.option-card.estimate-card .option-num-label {
+    font-size: 11px;
+    top: 4px;
+    left: 8px;
 }
 
 /* Custom 35-question quiz layout for Numerical Estimation */
@@ -1823,10 +1829,10 @@ select:focus {
     margin-bottom: 20px;
 }
 .numestimate-quiz-card {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-card);
     border: 1.5px solid var(--border-glass);
     border-radius: 16px;
-    padding: 20px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     transition: all 0.2s ease;
@@ -1864,11 +1870,12 @@ select:focus {
     border-radius: 10px;
     padding: 12px 15px;
     margin-bottom: 15px;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-main);
     line-height: 1.4;
     font-family: 'Outfit', sans-serif;
+    text-align: center;
 }
 .numestimate-qcard-options {
     display: grid;
