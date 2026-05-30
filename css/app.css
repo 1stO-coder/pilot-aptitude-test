@@ -1781,5 +1781,106 @@ select:focus {
     display: block;
 }
 
+/* Numerical Estimation Styles */
+.options-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+}
+
+@media (max-width: 768px) {
+    .options-grid-5 {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+}
+
+.option-card.estimate-card {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.option-card.estimate-card .option-text-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Custom 35-question quiz layout for Numerical Estimation */
+#numestimate-quiz-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 20px;
+}
+.numestimate-quiz-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1.5px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+}
+.numestimate-quiz-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.04);
+}
+.numestimate-quiz-card.answered-card {
+    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.02);
+}
+.numestimate-qcard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.numestimate-qcard-no {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 700;
+}
+.numestimate-qcard-lbl {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-dim);
+    font-weight: 600;
+}
+.numestimate-qcard-text {
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 10px;
+    padding: 18px 15px;
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.4;
+    font-family: 'Outfit', sans-serif;
+}
+.numestimate-qcard-options {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+@media (max-width: 768px) {
+    .numestimate-qcard-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+
 
 

@@ -42,6 +42,12 @@
                 <button class="nav-item" data-view="shaperotation">
                     <span class="nav-icon">🔄</span> 2D Shape Rotation
                 </button>
+                <button class="nav-item" data-view="obliqueview">
+                    <span class="nav-icon">📐</span> Oblique View
+                </button>
+                <button class="nav-item" data-view="rotatingview">
+                    <span class="nav-icon">📦</span> Rotating View
+                </button>
                 
                 <div class="nav-section-title">Attention & Memory</div>
                 <button class="nav-item" data-view="nback">
@@ -57,6 +63,9 @@
                 <div class="nav-section-title">Logical & Reasoning</div>
                 <button class="nav-item" data-view="seriesnum">
                     <span class="nav-icon">🔢</span> Number Series
+                </button>
+                <button class="nav-item" data-view="numestimate">
+                    <span class="nav-icon">🧮</span> Number Estimation
                 </button>
             </nav>
             <div class="sidebar-footer">
@@ -211,6 +220,57 @@
                         <div class="gsc-best" id="best-seriesnum">สถิติดีที่สุด: -</div>
                         <div class="gsc-footer">
                             <span class="gsc-stats" id="stats-seriesnum">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="obliqueview">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">📐</span>
+                            <span class="gsc-badge">Spatial</span>
+                        </div>
+                        <h3>Oblique View Test</h3>
+                        <p>วิเคราะห์ภาพฉาย 2 มิติ (หน้า, ข้าง, บน) จากรูปทรงบล็อก 3 มิติในทิศทางที่กำหนด</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-obliqueview" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-best" id="best-obliqueview">สถิติดีที่สุด: -</div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-obliqueview">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="rotatingview">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">📦</span>
+                            <span class="gsc-badge">Spatial</span>
+                        </div>
+                        <h3>Rotating View Test</h3>
+                        <p>เปรียบเทียบรูปทรงบล็อก 3 มิติเพื่อค้นหาภาพวัตถุเดียวกันที่ถูกหมุนหมุนในทิศทางต่างๆ</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-rotatingview" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-best" id="best-rotatingview">สถิติดีที่สุด: -</div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-rotatingview">ไม่มีข้อมูล</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="numestimate">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">🧮</span>
+                            <span class="gsc-badge">Logic</span>
+                        </div>
+                        <h3>Numerical Estimation</h3>
+                        <p>ฝึกฝนการกะประมาณคำตอบคณิตศาสตร์และการประมาณคำนวณโจทย์ปัญหาเชิงตัวเลข</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-numestimate" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-best" id="best-numestimate">สถิติดีที่สุด: -</div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-numestimate">ยังไม่ได้ทดสอบ</span>
                             <button class="btn-launch">LAUNCH</button>
                         </div>
                     </div>
@@ -589,8 +649,8 @@
                             </div>
                         </div>
 
-                        <div class="lobby-settings-grid">
-                            <div class="lobby-settings-item">
+                        <div class="lobby-settings-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                            <div class="lobby-settings-item" id="lobby-hidden-density-item">
                                 <label>ความหนาแน่นเส้นพราง (ลายตา):</label>
                                 <select id="lobby-hidden-lines-density">
                                     <option value="25">เส้นพรางน้อย (Starter - 25 เส้น)</option>
@@ -835,6 +895,284 @@
                 </div>
             </section>
 
+            <!-- ══════════════ VIEW: OBLIQUE VIEW ══════════════ -->
+            <section class="content-view" id="view-obliqueview">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="obliqueview-lobby">
+                    <div class="lobby-content">
+                        <h2>📐 Oblique View (3D to 2D Projections)</h2>
+                        <p class="lobby-desc">แบบทดสอบประเมินมิติสัมพันธ์ โดยการวิเคราะห์ภาพฉาย 2 มิติ (รูปภาพแบนในทิศทางต่างๆ) จากบล็อกไม้ 3 มิติเชิงซ้อน</p>
+                        <div class="lobby-best-record" id="obliqueview-lobby-best">🏆 สถิติที่ดีที่สุด (Best Record): กำลังโหลด...</div>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ฝึกฝนการวิเคราะห์มุมฉายโดยไม่มีข้อจำกัดเวลา เลือกทิศทาง A/B/C และดูเฉลยได้ทันที</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบจำกัดเวลา 20 ข้อ เพื่อประเมินผลความแม่นยำทางมิติสัมพันธ์</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ระดับความยากของรูปทรง (Complexity):</label>
+                                <select id="lobby-oblique-difficulty">
+                                    <option value="easy" selected>ง่าย (ตาราง 3x3x3)</option>
+                                    <option value="medium">ปานกลาง (ตาราง 4x4x4)</option>
+                                    <option value="hard">ยาก (ตาราง 5x5x5)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="obliqueview-start-lobby">เริ่มภารกิจ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="obliqueview-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Oblique View Test</h2>
+                            <span class="mode-tag" id="oblique-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="oblique-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="oblique-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="oblique-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="oblique-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="obliqueview-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <div class="split-view">
+                            <div class="canvas-container main-canvas-card">
+                                <div class="canvas-label" id="oblique-question-text">บล็อก 3 มิติและทิศทางฉายอ้างอิง</div>
+                                <canvas id="obliqueview-canvas"></canvas>
+                            </div>
+                            <div class="options-container">
+                                <div class="oblique-desc" id="oblique-prompt-message">
+                                    จงเลือกภาพฉาย 2 มิติที่ถูกต้องสำหรับ ด้าน X
+                                </div>
+                                <div class="options-grid-4" id="obliqueview-options-grid">
+                                    <!-- Options generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="oblique-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="oblique-difficulty">
+                                <option value="easy" selected>ง่าย (ตาราง 3x3x3)</option>
+                                <option value="medium">ปานกลาง (ตาราง 4x4x4)</option>
+                                <option value="hard">ยาก (ตาราง 5x5x5)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="oblique-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="oblique-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="oblique-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: ROTATING VIEW ══════════════ -->
+            <section class="content-view" id="view-rotatingview">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="rotatingview-lobby">
+                    <div class="lobby-content">
+                        <h2>📦 Rotating View (3D Mental Rotation)</h2>
+                        <p class="lobby-desc">แบบทดสอบการรับรู้ตำแหน่งรูปทรงเชิงซ้อน โดยหมุนรูปทรงต้นแบบ 3 มิติทางซ้ายในใจ แล้วจับคู่กับรูปที่เหมือนกันในตัวเลือก</p>
+                        <div class="lobby-best-record" id="rotatingview-lobby-best">🏆 สถิติที่ดีที่สุด (Best Record): กำลังโหลด...</div>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ฝึกหมุนวัตถุในใจไม่จำกัดเวลา มีเฉลยและหมุนทิศทางเพื่อช่วยทำความเข้าใจเมื่อเลือกเสร็จ</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบจำกัดเวลา 20 ข้อ เพื่อวัดผลความแม่นยำในการหมุนและแยกแยะทรง 3 มิติ</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid">
+                            <div class="lobby-settings-item">
+                                <label>ความซับซ้อนของบล็อก (Block Complexity):</label>
+                                <select id="lobby-rotating-difficulty">
+                                    <option value="easy" selected>ง่าย (บล็อก 4-5 ชิ้น)</option>
+                                    <option value="medium">ปานกลาง (บล็อก 6-8 ชิ้น)</option>
+                                    <option value="hard">ยาก (บล็อก 9-12 ชิ้น)</option>
+                                    <option value="vhard">ยากมาก (บล็อก 16-20 ชิ้น)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="rotatingview-start-lobby">เริ่มภารกิจ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <div class="game-stage" id="rotatingview-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Rotating View Test</h2>
+                            <span class="mode-tag" id="rotating-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="rotating-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="rotating-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="rotating-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="rotating-timer">00:00</span><span class="gs-label">Time</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="rotatingview-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <div class="split-view">
+                            <div class="canvas-container main-canvas-card">
+                                <div class="canvas-label">บล็อกต้นแบบ (TARGET MODEL)</div>
+                                <canvas id="rotatingview-canvas"></canvas>
+                            </div>
+                            <div class="options-container">
+                                <div class="rotating-desc">
+                                    จงค้นหาว่าบล็อกต้นแบบทางซ้ายคือรูปทรงใดใน 4 ตัวเลือกด้านล่างที่ผ่านการหมุนทิศทาง
+                                </div>
+                                <div class="options-grid-4" id="rotatingview-options-grid">
+                                    <!-- Options generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="rotating-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                            </select>
+                            <select id="rotating-difficulty">
+                                <option value="easy" selected>ง่าย (บล็อก 4-5)</option>
+                                <option value="medium">ปานกลาง (บล็อก 6-8)</option>
+                                <option value="hard">ยาก (บล็อก 9-12)</option>
+                                <option value="vhard">ยากมาก (บล็อก 16-20)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="rotating-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="rotating-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="rotating-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- ══════════════ VIEW: NUMERICAL ESTIMATION ══════════════ -->
+            <section class="content-view" id="view-numestimate">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="numestimate-lobby">
+                    <div class="lobby-content">
+                        <h2>🧮 Numerical Estimation (Baseline Test)</h2>
+                        <p class="lobby-desc">แบบทดสอบการประมาณคำตอบทางคณิตศาสตร์จากโจทย์คำนวณและโจทย์ปัญหาเชิงตัวเลข โดยหาคำตอบที่ใกล้เคียงที่สุดโดยไม่ใช้เครื่องคิดเลข</p>
+                        <div class="lobby-best-record" id="numestimate-lobby-best">🏆 สถิติที่ดีที่สุด (Best Record): กำลังโหลด...</div>
+                        
+                        <div class="lobby-modes-grid">
+                            <div class="lobby-mode-card active" data-mode="practice">
+                                <span class="mode-icon">🔋</span>
+                                <h4>ฝึกซ้อมอิสระ</h4>
+                                <p>ซ้อมคิดเลขประมาณค่าโดยไม่มีเวลาจำกัด มีการแสดงวิธีคิดและเฉลยคำตอบละเอียดทันทีหลังตอบ</p>
+                            </div>
+                            <div class="lobby-mode-card" data-mode="quiz">
+                                <span class="mode-icon">⏱️</span>
+                                <h4>แบบทดสอบจับเวลา</h4>
+                                <p>ทำแบบทดสอบจับเวลาจริง 35 ข้อ จำกัดเวลา 10 นาที เพื่อประเมินความเร็วและความแม่นยำในการวิเคราะห์ประมาณค่า</p>
+                            </div>
+                        </div>
+
+                        <div class="lobby-settings-grid" style="display:none;">
+                            <div class="lobby-settings-item">
+                                <label>ประเภทโจทย์และระดับความซับซ้อน (Complexity):</label>
+                                <select id="lobby-numestimate-difficulty">
+                                    <option value="mixed" selected>คละระดับยากง่าย (Mixed)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="numestimate-start-lobby">เริ่มทดสอบการประมาณค่า (START MISSION)</button>
+                    </div>
+                </div>
+
+                <!-- GAME PLAY STAGE -->
+                <div class="game-stage" id="numestimate-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Numerical Estimation</h2>
+                            <span class="mode-tag" id="numestimate-mode-tag">Free Practice</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat"><span class="gs-val" id="numestimate-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat"><span class="gs-val" id="numestimate-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="numestimate-quest">1/35</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="numestimate-timer">08:00</span><span class="gs-label">Time Left</span></div>
+                        </div>
+                    </header>
+                    <div class="quiz-navigator" id="numestimate-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <!-- Scrollable Quiz View for all 35 questions at once -->
+                        <div id="numestimate-quiz-container" style="display:none;"></div>
+
+                        <div class="split-view numestimate-split-view" id="numestimate-practice-view" style="flex-direction: column; gap: 20px;">
+                            <!-- Top Area displaying the Math expression / Word Problem -->
+                            <div class="canvas-container main-canvas-card" style="min-height: 200px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 25px;">
+                                <div class="canvas-label">โจทย์คณิตศาสตร์ (MATH PROBLEM)</div>
+                                <div id="numestimate-question-display" style="font-size: 26px; font-weight: 700; color: #fff; line-height: 1.5; font-family: 'Outfit', sans-serif;">
+                                    347 + 198 = ?
+                                </div>
+                            </div>
+                            
+                            <!-- Bottom Area displaying options -->
+                            <div class="options-container" style="width: 100%;">
+                                <div class="numestimate-desc" style="margin-bottom: 10px; text-align: center; color: var(--text-dim);">
+                                    จงเลือกคำตอบที่มี **ค่าใกล้เคียงกับผลลัพธ์จริงมากที่สุด** (คำใบ้คีย์บอร์ด: กดปุ่ม A-E หรือ 1-5)
+                                </div>
+                                <div class="options-grid-5" id="numestimate-options-grid">
+                                    <!-- 5 option-card choices will be generated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer controls panel -->
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <select id="numestimate-run-mode">
+                                <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 35 ข้อ/10 นาที)</option>
+                            </select>
+                            <select id="numestimate-difficulty" style="display:none;">
+                                <option value="mixed" selected>คละระดับยากง่าย (Mixed)</option>
+                            </select>
+                        </div>
+                        <div class="btn-group" style="gap: 8px;">
+                            <button class="btn-action" id="numestimate-prev-btn" style="display:none;">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="numestimate-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="numestimate-submit-exam-btn" style="display:none; background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งกระดาษคำตอบ</button>
+                        </div>
+                    </footer>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -899,5 +1237,8 @@
     <script src="js/hiddenimage.js"></script>
     <script src="js/shaperotation.js"></script>
     <script src="js/similarity.js"></script>
+    <script src="js/obliqueview.js"></script>
+    <script src="js/rotatingview.js"></script>
+    <script src="js/numestimate.js"></script>
 </body>
 </html>

@@ -187,7 +187,7 @@ function checkAchievements(newSession) {
 // ROUTER & NAVIGATION CONTROLLER
 // ═══════════════════════════════════════════════
 
-const GAME_IDS = ['skyassemble_assemble', 'skyassemble_disassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
+const GAME_IDS = ['skyassemble_assemble', 'skyassemble_disassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum', 'obliqueview', 'rotatingview', 'numestimate'];
 let activeView = "dashboard";
 
 function switchView(target) {
@@ -226,6 +226,9 @@ function stopActiveGame(gameId) {
     if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.stop();
     if (gameId === 'similarity' && window.SimilarityEngine) window.SimilarityEngine.stop();
     if (gameId === 'seriesnum' && window.SeriesNumEngine) window.SeriesNumEngine.stop();
+    if (gameId === 'obliqueview' && window.ObliqueViewEngine) window.ObliqueViewEngine.stop();
+    if (gameId === 'rotatingview' && window.RotatingViewEngine) window.RotatingViewEngine.stop();
+    if (gameId === 'numestimate' && window.NumEstimateEngine) window.NumEstimateEngine.stop();
 }
 
 function startActiveGame(gameId) {
@@ -239,6 +242,9 @@ function startActiveGame(gameId) {
         if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.start();
         if (gameId === 'similarity' && window.SimilarityEngine) window.SimilarityEngine.start();
         if (gameId === 'seriesnum' && window.SeriesNumEngine) window.SeriesNumEngine.start();
+        if (gameId === 'obliqueview' && window.ObliqueViewEngine) window.ObliqueViewEngine.start();
+        if (gameId === 'rotatingview' && window.RotatingViewEngine) window.RotatingViewEngine.start();
+        if (gameId === 'numestimate' && window.NumEstimateEngine) window.NumEstimateEngine.start();
     }, 150);
 }
 
@@ -285,6 +291,19 @@ const GAME_DIFFICULTIES = {
         { key: 'hard', label: 'Hard (สมการกำลังสอง)' },
         { key: 'vhard', label: 'Very Hard (Lucas/สูตร)' },
         { key: 'competition', label: 'แข่งขันจริง (ผสมระดับความยาก)' }
+    ],
+    'obliqueview': [
+        { key: 'easy', label: 'Easy (ง่าย - 4-6 บล็อก)' },
+        { key: 'medium', label: 'Medium (ปานกลาง - 7-10 บล็อก)' },
+        { key: 'hard', label: 'Hard (ยาก - 11-15 บล็อก)' }
+    ],
+    'rotatingview': [
+        { key: 'easy', label: 'Easy (ง่าย - 4-6 บล็อก)' },
+        { key: 'medium', label: 'Medium (ปานกลาง - 7-10 บล็อก)' },
+        { key: 'hard', label: 'Hard (ยาก - 11-15 บล็อก)' }
+    ],
+    'numestimate': [
+        { key: 'mixed', label: 'Mixed (คละระดับยากง่าย)' }
     ]
 };
 
@@ -296,6 +315,9 @@ function getSessionDifficulty(s) {
     if (s.gameId === 'hiddenimage') return '45';
     if (s.gameId === 'similarity') return 'medium';
     if (s.gameId === 'seriesnum') return 'easy';
+    if (s.gameId === 'obliqueview') return 'easy';
+    if (s.gameId === 'rotatingview') return 'easy';
+    if (s.gameId === 'numestimate') return s.difficulty || 'mixed';
     return null;
 }
 
@@ -454,7 +476,10 @@ function renderDashboard() {
         'nback': 'Dual N-Back Protocol',
         'hiddenimage': 'Hidden Image Test',
         'similarity': 'Similarity Test',
-        'seriesnum': 'Number Series Trainer'
+        'seriesnum': 'Number Series Trainer',
+        'obliqueview': 'Oblique View Test',
+        'rotatingview': 'Rotating View Test',
+        'numestimate': 'Numerical Estimation'
     };
     const logsBody = document.getElementById('db-flight-logs-body');
     if (logsBody) {
@@ -532,7 +557,7 @@ function renderDashboard() {
 
 function updateLobbyBestRecords() {
     loadDB();
-    const OTHER_GAMES = ['shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum'];
+    const OTHER_GAMES = ['shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum', 'numestimate'];
     
     OTHER_GAMES.forEach(gid => {
         const lobbyBestEl = document.getElementById(`${gid}-lobby-best`);
@@ -649,6 +674,9 @@ window.reviewQuestionItem = function(gameId, questionIdx) {
     if (gameId === 'hiddenimage' && window.HiddenImageEngine) window.HiddenImageEngine.review(questionIdx);
     if (gameId === 'similarity' && window.SimilarityEngine) window.SimilarityEngine.review(questionIdx);
     if (gameId === 'seriesnum' && window.SeriesNumEngine) window.SeriesNumEngine.review(questionIdx);
+    if (gameId === 'obliqueview' && window.ObliqueViewEngine) window.ObliqueViewEngine.review(questionIdx);
+    if (gameId === 'rotatingview' && window.RotatingViewEngine) window.RotatingViewEngine.review(questionIdx);
+    if (gameId === 'numestimate' && window.NumEstimateEngine) window.NumEstimateEngine.review(questionIdx);
 };
 
 function closeResultModal() {
@@ -720,6 +748,9 @@ document.addEventListener('keydown', (e) => {
     else if (activeView === 'hiddenimage') routeKey(window.HiddenImageEngine, e);
     else if (activeView === 'similarity') routeKey(window.SimilarityEngine, e);
     else if (activeView === 'seriesnum') routeKey(window.SeriesNumEngine, e);
+    else if (activeView === 'obliqueview') routeKey(window.ObliqueViewEngine, e);
+    else if (activeView === 'rotatingview') routeKey(window.RotatingViewEngine, e);
+    else if (activeView === 'numestimate') routeKey(window.NumEstimateEngine, e);
 });
 
 window.onload = () => {

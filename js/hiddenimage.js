@@ -29,6 +29,26 @@ const HiddenImageEngine = (function() {
     let quizTimerCount = 0;
     let timerInterval = null;
 
+    // Combining REF_SHAPES and UNIT15_REF_SHAPES, and adding Pentagon & Hexagon
+    const ALL_SHAPES = [
+        { name: 'Triangle', pts: [[0, -32], [32, 22], [-32, 22]] },
+        { name: 'Square',   pts: [[-26, -26], [26, -26], [26, 26], [-26, 26]] },
+        { name: 'Diamond',  pts: [[0, -35], [26, 0], [0, 35], [-26, 0]] },
+        { name: 'House',    pts: [[0, -35], [26, -10], [20, 26], [-20, 26], [-26, -10]] },
+        { name: 'Chevron',  pts: [[-24, -28], [0, -10], [24, -28], [24, 12], [0, 30], [-24, 12]] },
+        { name: 'Cross',    pts: [[-8, -26], [8, -26], [8, -8], [26, -8], [26, 8], [8, 8], [8, 26], [-8, 26], [-8, 8], [-26, 8], [-26, -8], [-8, -8]] },
+        { name: 'Slanted Bar', pts: [[-25, -15], [10, -15], [25, 15], [-10, 15]] },
+        { name: 'L-Shape', pts: [[-20, -20], [-5, -20], [-5, 5], [20, 5], [20, 20], [-20, 20]] },
+        { name: 'U-Shape', pts: [[-20, -20], [-5, -20], [-5, 5], [5, 5], [5, -20], [20, -20], [20, 20], [-20, 20]] },
+        { name: 'T-Shape', pts: [[-25, -20], [25, -20], [25, -5], [7, -5], [7, 25], [-7, 25], [-7, -5], [-25, -5]] },
+        { name: 'Pentagon', pts: [[0, -32], [30, -10], [18, 26], [-18, 26], [-30, -10]] },
+        { name: 'Hexagon',  pts: [[0, -32], [28, -16], [28, 16], [0, 32], [-28, 16], [-28, -16]] }
+    ];
+
+    function getShapesPool() {
+        return ALL_SHAPES;
+    }
+
     // UI Selectors
     const runModeSelect = document.getElementById('hidden-run-mode');
     const densitySelect = document.getElementById('hidden-lines-density');
@@ -46,19 +66,6 @@ const HiddenImageEngine = (function() {
     const submitBtn = document.getElementById('hidden-submit-exam-btn');
     const quizNav = document.getElementById('hiddenimage-quiz-navigator');
 
-    // Reference Shapes definitions
-    const REF_SHAPES = [
-        { name: 'Triangle', pts: [[0, -32], [32, 22], [-32, 22]] },
-        { name: 'Square',   pts: [[-26, -26], [26, -26], [26, 26], [-26, 26]] },
-        { name: 'Diamond',  pts: [[0, -35], [26, 0], [0, 35], [-26, 0]] },
-        { name: 'House',    pts: [[0, -35], [26, -10], [20, 26], [-20, 26], [-26, -10]] },
-        { name: 'Chevron',  pts: [[-24, -28], [0, -10], [24, -28], [24, 12], [0, 30], [-24, 12]] },
-        { name: 'Cross',    pts: [
-            [-8, -26], [8, -26], [8, -8], [26, -8], [26, 8], [8, 8],
-            [8, 26], [-8, 26], [-8, 8], [-26, 8], [-26, -8], [-8, -8]
-        ]}
-    ];
-
     // Helper functions
     const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
     function shuffle(a) {
@@ -68,6 +75,28 @@ const HiddenImageEngine = (function() {
             [r[i], r[j]] = [r[j], r[i]];
         }
         return r;
+    }
+
+    function keepPolygonInBounds(pts, w, h, margin = 25) {
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        pts.forEach(p => {
+            if (p[0] < minX) minX = p[0];
+            if (p[0] > maxX) maxX = p[0];
+            if (p[1] < minY) minY = p[1];
+            if (p[1] > maxY) maxY = p[1];
+        });
+        let shiftX = 0, shiftY = 0;
+        if (minX < margin) shiftX = margin - minX;
+        else if (maxX > w - margin) shiftX = (w - margin) - maxX;
+        if (minY < margin) shiftY = margin - minY;
+        else if (maxY > h - margin) shiftY = (h - margin) - maxY;
+        if (shiftX !== 0 || shiftY !== 0) {
+            pts.forEach(p => {
+                p[0] += shiftX;
+                p[1] += shiftY;
+            });
+        }
     }
 
     // --- 3D / 2D Canvas Scaling ---
@@ -87,27 +116,29 @@ const HiddenImageEngine = (function() {
         if (grid) {
             const rect = grid.getBoundingClientRect();
             if (rect.width > 0) {
-                let cellW = (rect.width - 15) / 2;
-                let cellH = (rect.height - 15) / 2;
+                let cellW = (rect.width - 4 * 15) / 5;
+                let cellH = rect.height;
                 optionCanvasDim = Math.min(cellW, cellH);
             }
         }
         
         let maxRadius = 1;
-        REF_SHAPES.forEach(sym => {
+        const pool = getShapesPool();
+        pool.forEach(sym => {
             sym.pts.forEach(p => {
                 let r = Math.hypot(p[0], p[1]);
                 if (r > maxRadius) maxRadius = r;
             });
         });
-        return (optionCanvasDim * 0.45) / maxRadius; // Larger, 1:1 scale
+        return (optionCanvasDim * 0.38) / maxRadius; // Safe scale for 1:1 matching without clipping
     }
 
     // --- Image / Noise Generation ---
     function generatePattern(dims) {
         // 1. Choose a target shape from pool
-        targetShapeIndex = Math.floor(Math.random() * REF_SHAPES.length);
-        const ref = REF_SHAPES[targetShapeIndex];
+        const pool = getShapesPool();
+        targetShapeIndex = Math.floor(Math.random() * pool.length);
+        const ref = pool[targetShapeIndex];
         
         // Random center translation inside safety bounds
         const cx = rnd(80, dims.w - 80);
@@ -125,6 +156,9 @@ const HiddenImageEngine = (function() {
             const ry = p[0] * scale * Math.sin(rotAngle) + p[1] * scale * Math.cos(rotAngle);
             return [cx + rx, cy + ry];
         });
+
+        // Ensure target shape stays strictly in bounds
+        keepPolygonInBounds(embeddedPolygon, dims.w, dims.h, 25);
 
         // 2. Generate line noise segments (distractors)
         backgroundLines = [];
@@ -176,7 +210,7 @@ const HiddenImageEngine = (function() {
         const polyCount = Math.floor(densityCount / 4);
         
         for (let k = 0; k < polyCount; k++) {
-            const randomRef = REF_SHAPES[Math.floor(Math.random() * REF_SHAPES.length)];
+            const randomRef = pool[Math.floor(Math.random() * pool.length)];
             const tcx = rnd(40, dims.w - 40);
             const tcy = rnd(40, dims.h - 40);
             const tangle = Math.random() * Math.PI * 2;
@@ -294,6 +328,10 @@ const HiddenImageEngine = (function() {
         optionsGrid.innerHTML = '';
         const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
         
+        // Dynamically style grid columns for 5 options
+        optionsGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+        optionsGrid.style.gridTemplateRows = '1fr';
+        
         optionsList.forEach((opt, idx) => {
             const card = document.createElement('div');
             card.className = 'option-card';
@@ -407,16 +445,16 @@ const HiddenImageEngine = (function() {
 
         generatePattern(dims);
 
-        correctOptionIndex = Math.floor(Math.random() * 4);
         optionsList = [];
-        
-        let otherShapes = REF_SHAPES.filter((_, idx) => idx !== targetShapeIndex);
+        correctOptionIndex = Math.floor(Math.random() * 5);
+        const pool = getShapesPool();
+        let otherShapes = pool.filter((_, idx) => idx !== targetShapeIndex);
         otherShapes = shuffle(otherShapes);
         
         let oIdx = 0;
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
             if (i === correctOptionIndex) {
-                optionsList.push(REF_SHAPES[targetShapeIndex]);
+                optionsList.push(pool[targetShapeIndex]);
             } else {
                 optionsList.push(otherShapes[oIdx++]);
             }
@@ -605,7 +643,8 @@ const HiddenImageEngine = (function() {
         nextBtn.style.display = 'none';
         submitBtn.style.display = 'none';
         
-        window.showQuizResult('hiddenimage', correct, maxQuizQ, quizTimerCount, historyDetails, densitySelect.value);
+        const subType = densitySelect.value;
+        window.showQuizResult('hiddenimage', correct, maxQuizQ, quizTimerCount, historyDetails, subType);
     }
 
     function toggleRunMode() {
@@ -631,19 +670,20 @@ const HiddenImageEngine = (function() {
         // Pre-cache all 20 questions
         quizQuestions = [];
         const dims = { w: canvas.parentNode.clientWidth, h: canvas.parentNode.clientHeight };
+        const pool = getShapesPool();
         
         for (let i = 0; i < maxQuizQ; i++) {
             let pat = generatePattern(dims);
-            let corrIdx = Math.floor(Math.random() * 4);
+            let corrIdx = Math.floor(Math.random() * 5);
             let opts = [];
             
-            let otherShapes = REF_SHAPES.filter((_, idx) => idx !== pat.targetShapeIndex);
+            let otherShapes = pool.filter((_, idx) => idx !== pat.targetShapeIndex);
             otherShapes = shuffle(otherShapes);
             
             let oIdx = 0;
-            for (let o = 0; o < 4; o++) {
+            for (let o = 0; o < 5; o++) {
                 if (o === corrIdx) {
-                    opts.push(REF_SHAPES[pat.targetShapeIndex]);
+                    opts.push(pool[pat.targetShapeIndex]);
                 } else {
                     opts.push(otherShapes[oIdx++]);
                 }
@@ -661,7 +701,7 @@ const HiddenImageEngine = (function() {
             });
         }
         
-        document.querySelectorAll('.q-only').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('#hiddenimage-stage .q-only').forEach(el => el.style.display = 'block');
         quizNav.style.display = 'flex';
         
         clearInterval(timerInterval);
@@ -681,7 +721,7 @@ const HiddenImageEngine = (function() {
         clearInterval(timerInterval);
         runModeSelect.value = 'practice';
         modeTag.innerText = "Free Practice";
-        document.querySelectorAll('.q-only').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('#hiddenimage-stage .q-only').forEach(el => el.style.display = 'none');
         
         quizNav.style.display = 'none';
         prevBtn.style.display = 'none';
@@ -765,8 +805,9 @@ const HiddenImageEngine = (function() {
             else if (key === '2' || key === 'b') idx = 1;
             else if (key === '3' || key === 'c') idx = 2;
             else if (key === '4' || key === 'd') idx = 3;
+            else if (key === '5' || key === 'e') idx = 4;
             
-            if (idx >= 0 && idx < 4) {
+            if (idx >= 0 && idx < 5) {
                 const cards = document.querySelectorAll('#hiddenimage-options-grid .option-card');
                 if (cards[idx]) {
                     checkAnswer(idx, cards[idx]);
@@ -801,6 +842,7 @@ const HiddenImageEngine = (function() {
                 const selectedMode = activeModeCard ? activeModeCard.dataset.mode : 'practice';
                 
                 runModeSelect.value = selectedMode;
+                
                 densitySelect.value = document.getElementById('lobby-hidden-lines-density').value;
                 
                 document.getElementById('hiddenimage-lobby').style.display = 'none';
@@ -812,6 +854,17 @@ const HiddenImageEngine = (function() {
                     exitQuizMode();
                 }
             };
+            
+            // Render lobby records
+            window.renderLobbyBestForEl(document.getElementById('hiddenimage-lobby-best'), 'hiddenimage');
+            
+            // Active cards binding in lobby
+            document.querySelectorAll('#hiddenimage-lobby .lobby-mode-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('#hiddenimage-lobby .lobby-mode-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                };
+            });
         },
         stop: function() {
             active = false;
