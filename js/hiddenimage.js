@@ -116,8 +116,8 @@ const HiddenImageEngine = (function() {
         if (grid) {
             const rect = grid.getBoundingClientRect();
             if (rect.width > 0) {
-                let cellW = (rect.width - 3 * 15) / 4;
-                let cellH = grid.getBoundingClientRect().height || rect.height;
+                let cellW = (rect.width - 15) / 2;
+                let cellH = ((grid.getBoundingClientRect().height || rect.height) - 15) / 2;
                 optionCanvasDim = Math.min(cellW, cellH);
             }
         }
@@ -328,9 +328,9 @@ const HiddenImageEngine = (function() {
         optionsGrid.innerHTML = '';
         const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
         
-        // Dynamically style grid columns for 4 options
-        optionsGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
-        optionsGrid.style.gridTemplateRows = '1fr';
+        // Dynamically style grid columns for 2x2 layout
+        optionsGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+        optionsGrid.style.gridTemplateRows = 'repeat(2, 1fr)';
         
         optionsList.forEach((opt, idx) => {
             const card = document.createElement('div');

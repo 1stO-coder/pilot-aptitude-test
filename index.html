@@ -913,7 +913,7 @@
                             <div class="lobby-mode-card" data-mode="quiz">
                                 <span class="mode-icon">⏱️</span>
                                 <h4>แบบทดสอบจับเวลา</h4>
-                                <p>ทำแบบทดสอบจำกัดเวลา 20 ข้อ เพื่อประเมินผลความแม่นยำทางมิติสัมพันธ์</p>
+                                <p>ทำแบบทดสอบจำกัดเวลา 40 ข้อ เพื่อประเมินผลความแม่นยำทางมิติสัมพันธ์</p>
                             </div>
                         </div>
 
@@ -924,6 +924,7 @@
                                     <option value="easy" selected>ง่าย (ตาราง 3x3x3)</option>
                                     <option value="medium">ปานกลาง (ตาราง 4x4x4)</option>
                                     <option value="hard">ยาก (ตาราง 5x5x5)</option>
+                                    <option value="vhard">ยากมาก (ตาราง 6x6x6)</option>
                                 </select>
                             </div>
                         </div>
@@ -941,7 +942,7 @@
                         <div class="game-stats">
                             <div class="g-stat"><span class="gs-val" id="oblique-score">0</span><span class="gs-label">Score</span></div>
                             <div class="g-stat"><span class="gs-val" id="oblique-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
-                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="oblique-quest">1/20</span><span class="gs-label">Quest</span></div>
+                            <div class="g-stat q-only" style="display:none;"><span class="gs-val" id="oblique-quest">1/40</span><span class="gs-label">Quest</span></div>
                             <div class="g-stat q-only" style="display:none;"><span class="gs-val text-amber" id="oblique-timer">00:00</span><span class="gs-label">Time</span></div>
                         </div>
                     </header>
@@ -968,12 +969,13 @@
                         <div class="btn-group">
                             <select id="oblique-run-mode">
                                 <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
-                                <option value="quiz">แบบทดสอบ (Quiz 20 ข้อ)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 40 ข้อ)</option>
                             </select>
                             <select id="oblique-difficulty">
                                 <option value="easy" selected>ง่าย (ตาราง 3x3x3)</option>
                                 <option value="medium">ปานกลาง (ตาราง 4x4x4)</option>
                                 <option value="hard">ยาก (ตาราง 5x5x5)</option>
+                                <option value="vhard">ยากมาก (ตาราง 6x6x6)</option>
                             </select>
                         </div>
                         <div class="btn-group" style="gap: 8px;">
@@ -1095,7 +1097,7 @@
                             <div class="lobby-mode-card" data-mode="quiz">
                                 <span class="mode-icon">⏱️</span>
                                 <h4>แบบทดสอบจับเวลา</h4>
-                                <p>ทำแบบทดสอบจับเวลาจริง 35 ข้อ จำกัดเวลา 10 นาที เพื่อประเมินความเร็วและความแม่นยำในการวิเคราะห์ประมาณค่า</p>
+                                <p>ทำแบบทดสอบจับเวลาจริง 35 ข้อ จำกัดเวลา 8 นาที เพื่อประเมินความเร็วและความแม่นยำในการวิเคราะห์ประมาณค่า</p>
                             </div>
                         </div>
 
@@ -1158,7 +1160,7 @@
                         <div class="btn-group">
                             <select id="numestimate-run-mode">
                                 <option value="practice">ฝึกซ้อมอิสระ (Free Play)</option>
-                                <option value="quiz">แบบทดสอบ (Quiz 35 ข้อ/10 นาที)</option>
+                                <option value="quiz">แบบทดสอบ (Quiz 35 ข้อ/8 นาที)</option>
                             </select>
                             <select id="numestimate-difficulty" style="display:none;">
                                 <option value="mixed" selected>คละระดับยากง่าย (Mixed)</option>

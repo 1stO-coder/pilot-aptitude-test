@@ -29,7 +29,7 @@ const ObliqueViewEngine = (function() {
 
     // Quiz state
     let isQuizMode = false;
-    let maxQuizQ = 20;
+    let maxQuizQ = 40;
     let quizQuestions = [];
     let currentQIndex = 0;
     let quizTimerCount = 0;
@@ -234,13 +234,13 @@ const ObliqueViewEngine = (function() {
                     x: rx2,
                     y: ry2,
                     z: rz2,
-                    depth: rx2 + ry2 + rz2
+                    depth: rx2 + ry2 + 1.285575 * rz2
                 };
             });
             // Sort depth-wise: back to front
             renderedCubes.sort((a, b) => a.depth - b.depth);
         } else {
-            // Default isometric sorting: depth = x + y + z relative to center
+            // Default isometric sorting: depth = x + y + 1.285575 * z relative to center
             renderedCubes = blocks.map(b => {
                 const rx = b.x - cx;
                 const ry = b.y - cy;
@@ -249,7 +249,7 @@ const ObliqueViewEngine = (function() {
                     x: rx,
                     y: ry,
                     z: rz,
-                    depth: rx + ry + rz
+                    depth: rx + ry + 1.285575 * rz
                 };
             });
             renderedCubes.sort((a, b) => a.depth - b.depth);
@@ -502,50 +502,55 @@ const ObliqueViewEngine = (function() {
             return false;
         }
 
-        // Distractor 1: Flip Horizontal
-        let dist1 = correctGrid.map(row => [...row].reverse());
-        tryAdd(dist1);
+        // Try single-cell flips (exactly 1 cell difference)
+        let singleFlipCandidates = [];
+        for (let r = 0; r < currentGridSize; r++) {
+            for (let c = 0; c < currentGridSize; c++) {
+                let candidate = correctGrid.map(row => [...row]);
+                candidate[r][c] = !candidate[r][c];
+                singleFlipCandidates.push(candidate);
+            }
+        }
+        // Shuffle single flips to get random distractors
+        singleFlipCandidates = shuffle(singleFlipCandidates);
+        for (let candidate of singleFlipCandidates) {
+            tryAdd(candidate);
+            if (dist.length >= 3) break;
+        }
 
-        // Distractor 2: Flip Vertical
-        let dist2 = [...correctGrid].reverse();
-        tryAdd(dist2);
+        // Fallback to 2-cell flips if we still don't have 3 distractors
+        if (dist.length < 3) {
+            let doubleFlipCandidates = [];
+            for (let r1 = 0; r1 < currentGridSize; r1++) {
+                for (let c1 = 0; c1 < currentGridSize; c1++) {
+                    for (let r2 = r1; r2 < currentGridSize; r2++) {
+                        for (let c2 = (r2 === r1 ? c1 + 1 : 0); c2 < currentGridSize; c2++) {
+                            let candidate = correctGrid.map(row => [...row]);
+                            candidate[r1][c1] = !candidate[r1][c1];
+                            candidate[r2][c2] = !candidate[r2][c2];
+                            doubleFlipCandidates.push(candidate);
+                        }
+                    }
+                }
+            }
+            doubleFlipCandidates = shuffle(doubleFlipCandidates);
+            for (let candidate of doubleFlipCandidates) {
+                tryAdd(candidate);
+                if (dist.length >= 3) break;
+            }
+        }
 
-        // Distractor 3: Shift/Rotate or random cells
-        let dist3 = correctGrid.map(row => row.map(cell => (Math.random() < 0.2) ? !cell : cell));
-        tryAdd(dist3);
-
-        // Standard default distractors if not enough variety
+        // Absolute fallback (just in case)
         let attempts = 0;
         while (dist.length < 3 && attempts < 1000) {
             attempts++;
-            let candidate = null;
-            if (attempts < 100) {
-                // Try minor modification (flip 1 or 2 random cells of the correct grid)
-                candidate = correctGrid.map(row => [...row]);
-                let numFlips = rnd(1, 2);
-                for (let f = 0; f < numFlips; f++) {
-                    let r = rnd(0, currentGridSize - 1);
-                    let c = rnd(0, currentGridSize - 1);
-                    candidate[r][c] = !candidate[r][c];
-                }
-            } else {
-                // Purely random grid fallback
-                candidate = Array(currentGridSize).fill(null).map(() => 
-                    Array(currentGridSize).fill(null).map(() => Math.random() < 0.35)
-                );
-            }
-            tryAdd(candidate);
-        }
-
-        // Absolute fallback (virtually impossible to reach, but prevents crashing/infinite loop)
-        let fallbackAttempts = 0;
-        while (dist.length < 3 && fallbackAttempts < 200) {
-            fallbackAttempts++;
             let candidate = correctGrid.map(row => [...row]);
-            let idx = dist.length + fallbackAttempts;
-            let r = Math.floor(idx / currentGridSize) % currentGridSize;
-            let c = idx % currentGridSize;
-            candidate[r][c] = !candidate[r][c];
+            let numFlips = rnd(1, 3);
+            for (let f = 0; f < numFlips; f++) {
+                let r = rnd(0, currentGridSize - 1);
+                let c = rnd(0, currentGridSize - 1);
+                candidate[r][c] = !candidate[r][c];
+            }
             tryAdd(candidate);
         }
 
@@ -553,12 +558,12 @@ const ObliqueViewEngine = (function() {
     }
 
     // --- Render Option Grids ---
-    function render2DGridView(canvasEl, gridData, isCorrectHighlight = false, isWrongHighlight = false, isSelectedHighlight = false) {
+    function render2DGridView(canvasEl, gridData, isCorrectHighlight = false, isWrongHighlight = false, isSelectedHighlight = false, sharedMaxDim = null) {
         const ctx2d = canvasEl.getContext('2d');
         const dpr = window.devicePixelRatio || 1;
         const rect = canvasEl.parentNode.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) {
-            requestAnimationFrame(() => render2DGridView(canvasEl, gridData, isCorrectHighlight, isWrongHighlight, isSelectedHighlight));
+            requestAnimationFrame(() => render2DGridView(canvasEl, gridData, isCorrectHighlight, isWrongHighlight, isSelectedHighlight, sharedMaxDim));
             return;
         }
         
@@ -593,7 +598,7 @@ const ObliqueViewEngine = (function() {
         const numCols = maxC - minC + 1;
 
         const gridMargin = 12;
-        const cellSize = (Math.min(w, h) - gridMargin * 2) / Math.max(numRows, numCols);
+        const cellSize = (Math.min(w, h) - gridMargin * 2) / (sharedMaxDim || Math.max(numRows, numCols));
         const startX = (w - cellSize * numCols) / 2;
         const startY = (h - cellSize * numRows) / 2;
 
@@ -638,6 +643,33 @@ const ObliqueViewEngine = (function() {
         optionsGrid.innerHTML = '';
         const userChoice = (isQuizMode || isReviewMode) && quizQuestions[currentQIndex] ? quizQuestions[currentQIndex].userAnswer : null;
 
+        // Calculate shared max dimension across all options to ensure uniform scaling
+        let sharedMaxDim = 1;
+        optionsList.forEach(opt => {
+            const gridSize = opt.length;
+            let minR = gridSize, maxR = -1, minC = gridSize, maxC = -1;
+            let hasCells = false;
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (opt[r][c]) {
+                        if (r < minR) minR = r;
+                        if (r > maxR) maxR = r;
+                        if (c < minC) minC = c;
+                        if (c > maxC) maxC = c;
+                        hasCells = true;
+                    }
+                }
+            }
+            if (hasCells) {
+                const numRows = maxR - minR + 1;
+                const numCols = maxC - minC + 1;
+                const maxDim = Math.max(numRows, numCols);
+                if (maxDim > sharedMaxDim) {
+                    sharedMaxDim = maxDim;
+                }
+            }
+        });
+
         optionsList.forEach((opt, idx) => {
             const card = document.createElement('div');
             card.className = 'option-card';
@@ -677,7 +709,7 @@ const ObliqueViewEngine = (function() {
             requestAnimationFrame(() => {
                 const canv = document.getElementById(`oblique-opt-canvas-${idx}`);
                 if (canv) {
-                    render2DGridView(canv, opt, isHighlightedCorrect, isHighlightedWrong, isHighlightedSelected);
+                    render2DGridView(canv, opt, isHighlightedCorrect, isHighlightedWrong, isHighlightedSelected, sharedMaxDim);
                 }
             });
         });
@@ -700,8 +732,20 @@ const ObliqueViewEngine = (function() {
         nextBtn.innerText = "ข้ามข้อนี้";
         nextBtn.className = "btn-action";
 
-        currentGridSize = (currentDifficulty === 'easy') ? 3 : (currentDifficulty === 'medium') ? 4 : 5;
-        const numBlocks = (currentDifficulty === 'easy') ? rnd(4, 6) : (currentDifficulty === 'medium') ? rnd(7, 9) : rnd(10, 13);
+        let numBlocks;
+        if (currentDifficulty === 'easy') {
+            currentGridSize = 3;
+            numBlocks = rnd(4, 6);
+        } else if (currentDifficulty === 'medium') {
+            currentGridSize = 4;
+            numBlocks = rnd(7, 9);
+        } else if (currentDifficulty === 'hard') {
+            currentGridSize = 5;
+            numBlocks = rnd(10, 13);
+        } else { // 'vhard'
+            currentGridSize = 6;
+            numBlocks = rnd(15, 20);
+        }
         voxelModel = generateVisibleModel(numBlocks, currentGridSize);
         
         // Select random target projection side A, B, or C
@@ -931,11 +975,28 @@ const ObliqueViewEngine = (function() {
         timerVal.innerText = "00:00";
         modeTag.innerText = `Timed Challenge (Complexity: ${currentDifficulty})`;
 
-        currentGridSize = (currentDifficulty === 'easy') ? 3 : (currentDifficulty === 'medium') ? 4 : 5;
+        if (currentDifficulty === 'easy') {
+            currentGridSize = 3;
+        } else if (currentDifficulty === 'medium') {
+            currentGridSize = 4;
+        } else if (currentDifficulty === 'hard') {
+            currentGridSize = 5;
+        } else { // 'vhard'
+            currentGridSize = 6;
+        }
 
         quizQuestions = [];
         for (let i = 0; i < maxQuizQ; i++) {
-            const numBlocks = (currentDifficulty === 'easy') ? rnd(4, 6) : (currentDifficulty === 'medium') ? rnd(7, 9) : rnd(10, 13);
+            let numBlocks;
+            if (currentDifficulty === 'easy') {
+                numBlocks = rnd(4, 6);
+            } else if (currentDifficulty === 'medium') {
+                numBlocks = rnd(7, 9);
+            } else if (currentDifficulty === 'hard') {
+                numBlocks = rnd(10, 13);
+            } else { // 'vhard'
+                numBlocks = rnd(15, 20);
+            }
             let model = generateVisibleModel(numBlocks, currentGridSize);
             let side = ['A', 'B', 'C'][rnd(0, 2)];
             let correctGrid = getOrthographicView(model, side);
@@ -1014,7 +1075,7 @@ const ObliqueViewEngine = (function() {
         isAnswered = true;
         currentQIndex = historyIndex;
 
-        const q = item.savedQuestion;
+        const q = item;
         voxelModel = q.voxelModel;
         targetSide = q.targetSide;
         correctOptionIndex = q.correctOptionIndex;

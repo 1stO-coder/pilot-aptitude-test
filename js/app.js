@@ -294,13 +294,15 @@ const GAME_DIFFICULTIES = {
     ],
     'obliqueview': [
         { key: 'easy', label: 'Easy (ง่าย - 4-6 บล็อก)' },
-        { key: 'medium', label: 'Medium (ปานกลาง - 7-10 บล็อก)' },
-        { key: 'hard', label: 'Hard (ยาก - 11-15 บล็อก)' }
+        { key: 'medium', label: 'Medium (ปานกลาง - 7-9 บล็อก)' },
+        { key: 'hard', label: 'Hard (ยาก - 10-13 บล็อก)' },
+        { key: 'vhard', label: 'Very Hard (ยากมาก - 15-20 บล็อก)' }
     ],
     'rotatingview': [
-        { key: 'easy', label: 'Easy (ง่าย - 4-6 บล็อก)' },
-        { key: 'medium', label: 'Medium (ปานกลาง - 7-10 บล็อก)' },
-        { key: 'hard', label: 'Hard (ยาก - 11-15 บล็อก)' }
+        { key: 'easy', label: 'Easy (ง่าย - 4-5 บล็อก)' },
+        { key: 'medium', label: 'Medium (ปานกลาง - 6-8 บล็อก)' },
+        { key: 'hard', label: 'Hard (ยาก - 9-12 บล็อก)' },
+        { key: 'vhard', label: 'Very Hard (ยากมาก - 16-20 บล็อก)' }
     ],
     'numestimate': [
         { key: 'mixed', label: 'Mixed (คละระดับยากง่าย)' }

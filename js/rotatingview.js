@@ -207,7 +207,7 @@ const RotatingViewEngine = (function() {
                 let visTarget = countVisibleVoxels(preTarget);
                 let visCorr = countVisibleVoxels(corrOpt);
                 
-                if (visTarget === visCorr) {
+                if (visTarget === visCorr && getVisibleVoxelKey(preTarget) !== getVisibleVoxelKey(corrOpt)) {
                     let maxHiddenAllowed = (difficulty === 'vhard') ? (numBlocks - 13) : 0;
                     if (maxHiddenAllowed < 0) maxHiddenAllowed = 0;
                     
@@ -230,17 +230,30 @@ const RotatingViewEngine = (function() {
                 
                 let foundCorr = false;
                 let targetVis = countVisibleVoxels(preRotatedTarget);
-                for (let i = 0; i < 50; i++) {
+                let targetKey = getVisibleVoxelKey(preRotatedTarget);
+                for (let i = 0; i < 100; i++) {
                     let rot = getRandom3DRotation();
                     let candidateCorr = rotateVoxelModel(targetModel, rot.rx, rot.ry, rot.rz);
-                    if (countVisibleVoxels(candidateCorr) === targetVis) {
+                    if (countVisibleVoxels(candidateCorr) === targetVis && getVisibleVoxelKey(candidateCorr) !== targetKey) {
                         correctOption = candidateCorr;
                         foundCorr = true;
                         break;
                     }
                 }
                 if (!foundCorr) {
-                    correctOption = rotateVoxelModel(targetModel, targetRot.rx, targetRot.ry, targetRot.rz);
+                    let foundAnyDiff = false;
+                    for (let rAttempt = 0; rAttempt < 50; rAttempt++) {
+                        let rot = getRandom3DRotation();
+                        let candidateCorr = rotateVoxelModel(targetModel, rot.rx, rot.ry, rot.rz);
+                        if (getVisibleVoxelKey(candidateCorr) !== targetKey) {
+                            correctOption = candidateCorr;
+                            foundAnyDiff = true;
+                            break;
+                        }
+                    }
+                    if (!foundAnyDiff) {
+                        correctOption = rotateVoxelModel(targetModel, targetRot.rx + Math.PI / 2, targetRot.ry, targetRot.rz);
+                    }
                 }
             }
             
@@ -619,29 +632,108 @@ const RotatingViewEngine = (function() {
                 const ry2 = ry1 * Math.cos(pitchAngle) - rz * Math.sin(pitchAngle);
                 const rz2 = ry1 * Math.sin(pitchAngle) + rz * Math.cos(pitchAngle);
 
-                return { x: rx2, y: ry2, z: rz2, depth: rx2 + ry2 + rz2 };
+                return { x: rx2, y: ry2, z: rz2, depth: rx2 + ry2 + 1.285575 * rz2 };
             });
             sorted.sort((a, b) => a.depth - b.depth);
         } else {
             sorted = blocks.map(b => ({
                 x: b.x - cx, y: b.y - cy, z: b.z - cz,
-                depth: (b.x - cx) + (b.y - cy) + (b.z - cz)
+                depth: (b.x - cx) + (b.y - cy) + 1.285575 * (b.z - cz)
             }));
             sorted.sort((a, b) => a.depth - b.depth);
         }
 
-        const size = Math.min(cw, ch) * 0.12;
-        const ox = cw / 2;
-        const oy = ch / 2 - size * 0.2;
+        const theta = 40 * Math.PI / 180;
+        const cosAngle = Math.cos(theta);
+        const sinAngle = Math.sin(theta);
+
+        // Calculate unrotated projected bounds to get a constant scale size (prevents pulsing during rotation)
+        let minX_unrot = Infinity;
+        let maxX_unrot = -Infinity;
+        let minY_unrot = Infinity;
+        let maxY_unrot = -Infinity;
+
+        blocks.forEach(b => {
+            const ux = b.x - cx;
+            const uy = b.y - cy;
+            const uz = b.z - cz;
+            
+            const px = ux - uy;
+            const py = ux + uy;
+            
+            const lx = px * cosAngle - cosAngle;
+            const rx = px * cosAngle + cosAngle;
+            const ty = py * sinAngle - uz - 1;
+            const by = py * sinAngle - uz + 2 * sinAngle;
+
+            if (lx < minX_unrot) minX_unrot = lx;
+            if (rx > maxX_unrot) maxX_unrot = rx;
+            if (ty < minY_unrot) minY_unrot = ty;
+            if (by > maxY_unrot) maxY_unrot = by;
+        });
+
+        const width_unrot = maxX_unrot - minX_unrot;
+        const height_unrot = maxY_unrot - minY_unrot;
+
+        let evalCw = cw;
+        let evalCh = ch;
+        if (targetCanvas === canvas) {
+            // Find option canvas size to use the same scale size
+            const firstOptCanv = document.querySelector('[id^="rotating-opt-canvas-"]');
+            if (firstOptCanv) {
+                const optRect = firstOptCanv.parentNode.getBoundingClientRect();
+                if (optRect.width > 0 && optRect.height > 0) {
+                    evalCw = optRect.width;
+                    evalCh = optRect.height;
+                }
+            } else {
+                evalCw = 130;
+                evalCh = 130;
+            }
+        }
+
+        const margin = 10; // always use option margin for scaling to keep sizes identical
+        const sizeX = (evalCw - 2 * margin) / width_unrot;
+        const sizeY = (evalCh - 2 * margin) / height_unrot;
+        let size = Math.min(sizeX, sizeY);
+
+        // Cap size so it doesn't get too large (especially for easy levels or small models)
+        const maxSize = Math.min(evalCw, evalCh) * 0.14;
+        if (size > maxSize) {
+            size = maxSize;
+        }
+
+        // Center the model dynamically using the actual projected bounds of the current rotated model (sorted blocks)
+        let minX_proj = Infinity;
+        let maxX_proj = -Infinity;
+        let minY_proj = Infinity;
+        let maxY_proj = -Infinity;
+
+        sorted.forEach(b => {
+            const px = b.x - b.y;
+            const py = b.x + b.y;
+            
+            const lx = px * cosAngle - cosAngle;
+            const rx = px * cosAngle + cosAngle;
+            const ty = py * sinAngle - b.z - 1;
+            const by = py * sinAngle - b.z + 2 * sinAngle;
+
+            if (lx < minX_proj) minX_proj = lx;
+            if (rx > maxX_proj) maxX_proj = rx;
+            if (ty < minY_proj) minY_proj = ty;
+            if (by > maxY_proj) maxY_proj = by;
+        });
+
+        const proj_cx = (minX_proj + maxX_proj) / 2;
+        const proj_cy = (minY_proj + maxY_proj) / 2;
+
+        const ox = cw / 2 - proj_cx * size;
+        const oy = ch / 2 - proj_cy * size;
 
         let topColor = '#a5f3fc', leftColor = '#06b6d4', rightColor = '#0e7490', strokeColor = 'rgba(9, 9, 11, 0.4)';
         if (isCorrectOutline) { topColor = '#a7f3d0'; leftColor = '#10b981'; rightColor = '#047857'; strokeColor = '#10b981'; }
         else if (isWrongOutline) { topColor = '#fecdd3'; leftColor = '#f43f5e'; rightColor = '#be123c'; strokeColor = '#f43f5e'; }
         else if (isSelectedOutline) { topColor = '#bfdbfe'; leftColor = '#3b82f6'; rightColor = '#1d4ed8'; strokeColor = '#3b82f6'; }
-
-        const theta = 40 * Math.PI / 180;
-        const cosAngle = Math.cos(theta);
-        const sinAngle = Math.sin(theta);
 
         sorted.forEach(b => {
             const sx = ox + (b.x - b.y) * cosAngle * size;
@@ -754,8 +846,8 @@ const RotatingViewEngine = (function() {
         }
 
         questionStartTime = Date.now();
-        drawIsometricModel(canvas, preRotatedTarget);
         drawOptions();
+        drawIsometricModel(canvas, preRotatedTarget);
     }
 
     function checkAnswer(idx, cardEl) {
@@ -849,8 +941,8 @@ const RotatingViewEngine = (function() {
         submitBtn.style.display = 'block';
 
         updateQuizNavigator();
-        drawIsometricModel(canvas, q.preRotatedTarget);
         drawOptions();
+        drawIsometricModel(canvas, q.preRotatedTarget);
 
         // Update description with block count
         const descEl = document.querySelector('#view-rotatingview .rotating-desc');
@@ -1018,7 +1110,7 @@ const RotatingViewEngine = (function() {
         isAnswered = true;
         currentQIndex = historyIndex;
 
-        const q = item.savedQuestion;
+        const q = item;
         targetModel = q.targetModel;
         preRotatedTarget = q.preRotatedTarget;
         correctOptionIndex = q.correctOptionIndex;
@@ -1032,8 +1124,8 @@ const RotatingViewEngine = (function() {
             descEl.innerHTML = `จงค้นหาว่าบล็อกต้นแบบทางซ้ายคือรูปทรงใดใน 4 ตัวเลือกด้านล่างที่ผ่านการหมุนทิศทาง<br><small style="color: var(--text-dim);">บล็อกไม้นี้ประกอบด้วยบล็อกจำนวน ${targetModel.length} ลูก</small>`;
         }
 
-        drawIsometricModel(canvas, q.preRotatedTarget);
         drawOptions();
+        drawIsometricModel(canvas, q.preRotatedTarget);
 
         nextBtn.style.display = 'block';
         nextBtn.innerText = "กลับหน้าสรุปข้อสอบ";
@@ -1153,8 +1245,8 @@ const RotatingViewEngine = (function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             if (active && !isReviewMode) {
-                drawIsometricModel(canvas, preRotatedTarget);
                 drawOptions();
+                drawIsometricModel(canvas, preRotatedTarget);
             }
         }, 150);
     });
