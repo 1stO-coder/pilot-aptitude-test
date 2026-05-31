@@ -820,7 +820,6 @@ const ObliqueViewEngine = (function() {
             }, 500);
         } else {
             window.playSound('wrong');
-            window.showToast("WRONG");
             cardEl.classList.add('wrong');
 
             // Draw correct highlight on option cards

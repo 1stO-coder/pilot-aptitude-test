@@ -400,7 +400,6 @@ const SimilarityEngine = (function() {
             }, 500);
         } else {
             window.playSound('wrong');
-            window.showToast("WRONG");
             cardEl.classList.add('wrong');
             
             const cards = document.querySelectorAll('.sim-choice-card');

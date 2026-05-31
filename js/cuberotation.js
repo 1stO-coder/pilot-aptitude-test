@@ -491,7 +491,6 @@ const CubeRotationEngine = (function() {
             }, 500);
         } else {
             window.playSound('wrong');
-            window.showToast("WRONG");
             btnEl.classList.add('wrong');
             
             // Highlight correct button

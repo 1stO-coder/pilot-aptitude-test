@@ -893,7 +893,6 @@ const RotatingViewEngine = (function() {
             }, 500);
         } else {
             window.playSound('wrong');
-            window.showToast("WRONG");
             cardEl.classList.add('wrong');
 
             const cards = document.querySelectorAll('#rotatingview-options-grid .option-card');

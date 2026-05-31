@@ -636,7 +636,6 @@ const SkyAssembleEngine = (function() {
         } else {
             playSound('wrong');
             streak = 0;
-            window.showToast("WRONG");
             cardEl.classList.add('wrong');
             
             const cards = document.querySelectorAll('.option-card');
@@ -933,7 +932,7 @@ const SkyAssembleEngine = (function() {
     function exitReview() {
         isReviewMode = false;
         document.getElementById('skyassemble-review-banner').style.display = 'none';
-        linesToggle.querySelector('input').checked = false;
+        linesToggle.querySelector('input').checked = true;
         exitQuizMode();
     }
 

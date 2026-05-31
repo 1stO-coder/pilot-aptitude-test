@@ -647,7 +647,6 @@ const ShapeRotationEngine = (function() {
             }, 500);
         } else {
             window.playSound('wrong');
-            window.showToast("WRONG");
             cardEl.classList.add('wrong');
             
             // Show correct answer highlighting

@@ -795,7 +795,6 @@ const NumEstimateEngine = (function() {
             }, 500);
         } else {
             window.playSound('wrong');
-            window.showToast("WRONG");
             cardEl.classList.add('wrong');
             
             // Highlight correct choice

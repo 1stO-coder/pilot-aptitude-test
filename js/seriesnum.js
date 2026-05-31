@@ -456,7 +456,6 @@ const SeriesNumEngine = (function() {
                 window.playSound('wrong');
                 blank.className = "series-blank wrong";
                 card.classList.add('wrong-card');
-                window.showToast("WRONG");
                 
                 // Highlight incorrect choice
                 q.choices.forEach((c, idx) => {
