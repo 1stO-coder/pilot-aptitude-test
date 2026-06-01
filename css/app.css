@@ -1972,6 +1972,11 @@ select:focus {
     background: rgba(var(--accent-rgb), 0.08);
 }
 
+.math-opt-btn.selected {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.15);
+}
+
 .math-opt-btn.correct {
     background-color: rgba(var(--correct-rgb), 0.12) !important;
     border-color: var(--correct) !important;
