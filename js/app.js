@@ -187,7 +187,7 @@ function checkAchievements(newSession) {
 // ROUTER & NAVIGATION CONTROLLER
 // ═══════════════════════════════════════════════
 
-const GAME_IDS = ['skyassemble_assemble', 'skyassemble_disassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum', 'obliqueview', 'rotatingview', 'numestimate'];
+const GAME_IDS = ['skyassemble_assemble', 'skyassemble_disassemble', 'shaperotation', 'nback', 'hiddenimage', 'similarity', 'seriesnum', 'obliqueview', 'rotatingview', 'numestimate', 'shortmemory'];
 let activeView = "dashboard";
 
 function switchView(target) {
@@ -229,6 +229,7 @@ function stopActiveGame(gameId) {
     if (gameId === 'obliqueview' && window.ObliqueViewEngine) window.ObliqueViewEngine.stop();
     if (gameId === 'rotatingview' && window.RotatingViewEngine) window.RotatingViewEngine.stop();
     if (gameId === 'numestimate' && window.NumEstimateEngine) window.NumEstimateEngine.stop();
+    if (gameId === 'shortmemory' && window.ShortMemoryEngine) window.ShortMemoryEngine.stop();
 }
 
 function startActiveGame(gameId) {
@@ -245,6 +246,7 @@ function startActiveGame(gameId) {
         if (gameId === 'obliqueview' && window.ObliqueViewEngine) window.ObliqueViewEngine.start();
         if (gameId === 'rotatingview' && window.RotatingViewEngine) window.RotatingViewEngine.start();
         if (gameId === 'numestimate' && window.NumEstimateEngine) window.NumEstimateEngine.start();
+        if (gameId === 'shortmemory' && window.ShortMemoryEngine) window.ShortMemoryEngine.start();
     }, 150);
 }
 
@@ -306,6 +308,9 @@ const GAME_DIFFICULTIES = {
     ],
     'numestimate': [
         { key: 'mixed', label: 'Mixed (คละระดับยากง่าย)' }
+    ],
+    'shortmemory': [
+        { key: 'standard', label: 'มาตรฐาน (Standard)' }
     ]
 };
 
@@ -320,6 +325,7 @@ function getSessionDifficulty(s) {
     if (s.gameId === 'obliqueview') return 'easy';
     if (s.gameId === 'rotatingview') return 'easy';
     if (s.gameId === 'numestimate') return s.difficulty || 'mixed';
+    if (s.gameId === 'shortmemory') return 'standard';
     return null;
 }
 
@@ -584,7 +590,17 @@ function showQuizResult(gameId, correct, total, seconds, history, difficulty = n
     const s = (seconds % 60).toString().padStart(2, '0');
     
     // Fill text content
-    document.getElementById('res-modal-score').innerText = `${correct}/${total}`;
+    const scoreEl = document.getElementById('res-modal-score');
+    if (gameId === 'shortmemory' && window.ShortMemoryEngine) {
+        const mathCorrect = window.ShortMemoryEngine.getMathCorrectCount();
+        scoreEl.style.fontSize = '15px';
+        scoreEl.style.lineHeight = '1.4';
+        scoreEl.innerHTML = `บทความ: <span style="color:var(--accent)">${correct}/${total}</span><br>คิดเลข: <span style="color:var(--amber)">${mathCorrect}/50</span>`;
+    } else {
+        scoreEl.style.fontSize = ''; // Reset standard font size
+        scoreEl.style.lineHeight = '';
+        scoreEl.innerText = `${correct}/${total}`;
+    }
     document.getElementById('res-modal-accuracy').innerText = `${pct}%`;
     document.getElementById('res-modal-time').innerText = `${m}:${s}`;
     
@@ -679,6 +695,7 @@ window.reviewQuestionItem = function(gameId, questionIdx) {
     if (gameId === 'obliqueview' && window.ObliqueViewEngine) window.ObliqueViewEngine.review(questionIdx);
     if (gameId === 'rotatingview' && window.RotatingViewEngine) window.RotatingViewEngine.review(questionIdx);
     if (gameId === 'numestimate' && window.NumEstimateEngine) window.NumEstimateEngine.review(questionIdx);
+    if (gameId === 'shortmemory' && window.ShortMemoryEngine) window.ShortMemoryEngine.review(questionIdx);
 };
 
 function closeResultModal() {
@@ -753,6 +770,7 @@ document.addEventListener('keydown', (e) => {
     else if (activeView === 'obliqueview') routeKey(window.ObliqueViewEngine, e);
     else if (activeView === 'rotatingview') routeKey(window.RotatingViewEngine, e);
     else if (activeView === 'numestimate') routeKey(window.NumEstimateEngine, e);
+    else if (activeView === 'shortmemory') routeKey(window.ShortMemoryEngine, e);
 });
 
 window.onload = () => {

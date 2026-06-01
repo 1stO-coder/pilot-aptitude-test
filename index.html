@@ -59,6 +59,9 @@
                 <button class="nav-item" data-view="similarity">
                     <span class="nav-icon">⚖️</span> Similarity Test
                 </button>
+                <button class="nav-item" data-view="shortmemory">
+                    <span class="nav-icon">📖</span> Short-Term Memory
+                </button>
                 
                 <div class="nav-section-title">Logical & Reasoning</div>
                 <button class="nav-item" data-view="seriesnum">
@@ -271,6 +274,23 @@
                         <div class="gsc-best" id="best-numestimate">สถิติดีที่สุด: -</div>
                         <div class="gsc-footer">
                             <span class="gsc-stats" id="stats-numestimate">ยังไม่ได้ทดสอบ</span>
+                            <button class="btn-launch">LAUNCH</button>
+                        </div>
+                    </div>
+
+                    <div class="game-select-card" data-launch="shortmemory">
+                        <div class="gsc-header">
+                            <span class="gsc-icon">📖</span>
+                            <span class="gsc-badge">Memory</span>
+                        </div>
+                        <h3>Short-Term Memory</h3>
+                        <p>แบบทดสอบการอ่านรายงานเที่ยวบินจำลอง 3 นาที แล้วทำโจทย์คิดเลขคั่น 3 นาที เพื่อตอบคำถาม 20 ข้อ</p>
+                        <div class="gsc-progress">
+                            <div class="gsc-progress-bar" id="progress-shortmemory" style="width: 0%"></div>
+                        </div>
+                        <div class="gsc-best" id="best-shortmemory">สถิติดีที่สุด: -</div>
+                        <div class="gsc-footer">
+                            <span class="gsc-stats" id="stats-shortmemory">ไม่มีข้อมูล</span>
                             <button class="btn-launch">LAUNCH</button>
                         </div>
                     </div>
@@ -1175,6 +1195,100 @@
                 </div>
             </section>
 
+            <!-- ══════════════ VIEW: SHORT-TERM MEMORY ══════════════ -->
+            <section class="content-view" id="view-shortmemory">
+                <!-- PRE-GAME LOBBY -->
+                <div class="game-lobby" id="shortmemory-lobby">
+                    <div class="lobby-content">
+                        <h2>📖 Short-Term Memory (ความจำระยะสั้น)</h2>
+                        <p class="lobby-desc">แบบทดสอบสมรรถภาพนักบินในการจำข้อมูลแผนการบินภายใต้ภาวะมีสิ่งรบกวนความจำ (Cognitive Interference)</p>
+                        <div class="lobby-best-record" id="shortmemory-lobby-best">🏆 สถิติดีที่สุด: กำลังโหลด...</div>
+                        
+                        <div class="lobby-instruction-card" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: left; max-width: 600px; width: 100%;">
+                            <h4 style="color: var(--accent); margin-bottom: 10px;">Flight Deck Checklist / ขั้นตอนการทำภารกิจ:</h4>
+                            <ol style="margin-left: 20px; color: var(--text-dim); line-height: 1.6;">
+                                <li><b>อ่านรายงานแผนการบิน (Reading Phase - 3 นาที):</b> อ่านเนื้อหาภาษาอังกฤษอย่างละเอียด (ความยาว ~350 คำ) จับรายละเอียดเชิงตัวเลขและเหตุการณ์ผิดปกติ</li>
+                                <li><b>คิดเลขคำนวณขั้นเวลา (Math Interference Phase - 3 นาที):</b> ตอบคำถามคณิตศาสตร์ (+, -, *, /) คัดเลือกคำตอบ 4 ตัวเลือกทั้งหมด 50 ข้อเพื่อเบี่ยงเบนความสนใจ</li>
+                                <li><b>ตอบคำถามวัดความจำ (Recall Phase):</b> ตอบคำถามภาษาอังกฤษ 30 ข้อ (ตัวเลือก A-E) อ้างอิงจากแผนการบินที่อ่านในขั้นแรก (ไม่จำกัดเวลา)</li>
+                            </ol>
+                        </div>
+
+                        <button class="btn-action primary lobby-start-btn" id="shortmemory-start-lobby">เริ่มภารกิจ (START MISSION)</button>
+                    </div>
+                </div>
+
+                <!-- GAME PLAY STAGE -->
+                <div class="game-stage" id="shortmemory-stage" style="display:none;">
+                    <header class="game-header">
+                        <div class="game-info">
+                            <h2>Short-Term Memory</h2>
+                            <span class="mode-tag" id="shortmemory-phase-name">Phase 1 / 3</span>
+                        </div>
+                        <div class="game-stats">
+                            <div class="g-stat" id="sm-stat-score-div" style="display:none;"><span class="gs-val" id="shortmemory-score">0</span><span class="gs-label">Score</span></div>
+                            <div class="g-stat" id="sm-stat-acc-div" style="display:none;"><span class="gs-val" id="shortmemory-accuracy">0%</span><span class="gs-label">Accuracy</span></div>
+                            <div class="g-stat"><span class="gs-val text-amber" id="shortmemory-timer">03:00</span><span class="gs-label">Reading Time</span></div>
+                        </div>
+                    </header>
+                    
+                    <div id="shortmemory-review-banner" class="review-banner" style="display:none;">
+                        🚨 โหมดตรวจเฉลย: แสดงข้อผิดพลาดและคำตอบที่ถูกต้อง (คลิกที่แถบนี้เพื่อกลับหน้าผลลัพธ์)
+                    </div>
+
+                    <!-- Progress navigator for recall phase -->
+                    <div class="quiz-navigator" id="shortmemory-quiz-navigator" style="display:none;"></div>
+
+                    <div class="game-play-area">
+                        <!-- Phase 1: Reading Briefing Sheet -->
+                        <div id="shortmemory-read-area" style="display:block; width: 100%; max-width: 800px; margin: 0 auto;">
+                            <div class="briefing-card">
+                                <div class="briefing-header">
+                                    <h3 id="shortmemory-read-title">FLIGHT REPORT</h3>
+                                    <span class="briefing-badge">OFFICIAL USE ONLY</span>
+                                </div>
+                                <div class="briefing-content" id="shortmemory-read-text" style="font-size: 16px; line-height: 1.8; color: var(--text-main); font-family: monospace; white-space: pre-line;">
+                                    Flight report details will load here...
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="btn-action primary" id="shortmemory-done-reading-btn" style="padding: 12px 30px; font-size: 16px;">อ่านเสร็จแล้ว (PROCEED TO MATH)</button>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2: Math Interference Task -->
+                        <div id="shortmemory-math-area" style="display:none; width: 100%; max-width: 600px; margin: 0 auto;">
+                            <div id="shortmemory-math-container" style="max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 20px;">
+                                <!-- Dynamically generated math question cards -->
+                            </div>
+                        </div>
+
+                        <!-- Phase 3: Recall Questions -->
+                        <div id="shortmemory-recall-area" style="display:none; width: 100%; max-width: 700px; margin: 0 auto;">
+                            <!-- Flight report displayed en-route during review -->
+                            <div id="shortmemory-recall-briefing-container" style="display:none; margin-bottom: 25px;"></div>
+                            
+                            <div id="shortmemory-recall-container" style="max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px;">
+                                <!-- Dynamically generated recall question cards -->
+                            </div>
+                            
+                            <!-- Math solutions list during review mode -->
+                            <div id="shortmemory-math-review-container" style="display:none; margin-top: 30px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Footer controls panel -->
+                    <footer class="game-controls">
+                        <div class="btn-group">
+                            <button class="btn-action" id="shortmemory-quit-btn" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--wrong);">ออกจากเกม</button>
+                        </div>
+                        <div class="btn-group" id="shortmemory-recall-navs" style="display:none; gap: 8px;">
+                            <button class="btn-action" id="shortmemory-prev-btn">ก่อนหน้า</button>
+                            <button class="btn-action primary" id="shortmemory-next-btn">ข้ามข้อนี้</button>
+                            <button class="btn-action" id="shortmemory-submit-btn" style="background: #fbbf24; border-color: #fbbf24; color: #000;">ส่งข้อสอบ</button>
+                        </div>
+                    </footer>
+                </div>
+
         </main>
     </div>
 
@@ -1242,5 +1356,6 @@
     <script src="js/obliqueview.js"></script>
     <script src="js/rotatingview.js"></script>
     <script src="js/numestimate.js"></script>
+    <script src="js/shortmemory.js"></script>
 </body>
 </html>

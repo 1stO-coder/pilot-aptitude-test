@@ -1888,6 +1888,177 @@ select:focus {
     }
 }
 
+/* ══════════════ SHORT-TERM MEMORY STYLES ══════════════ */
+.briefing-card {
+    background: #111116;
+    border: 1.5px solid var(--border-glass);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.briefing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #181822;
+    padding: 15px 20px;
+    border-bottom: 1.5px solid var(--border-glass);
+}
+
+.briefing-header h3 {
+    margin: 0;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.briefing-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--wrong);
+    border: 1px solid var(--wrong);
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.briefing-content {
+    padding: 25px;
+    max-height: 450px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-main);
+    text-align: left;
+}
+
+/* Scrollbar styling for briefing content */
+.briefing-content::-webkit-scrollbar {
+    width: 8px;
+}
+.briefing-content::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+}
+.briefing-content::-webkit-scrollbar-thumb {
+    background: var(--border-glass);
+    border-radius: 4px;
+}
+
+/* Math interference layouts */
+#shortmemory-math-equation {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-shadow: 0 0 15px rgba(255,255,255,0.1);
+}
+
+.math-opt-btn {
+    font-size: 22px;
+    font-weight: 700;
+    background: #181822;
+    border: 1.5px solid var(--border-glass);
+    border-radius: 12px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.math-opt-btn:hover {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.math-opt-btn.correct {
+    background-color: rgba(var(--correct-rgb), 0.12) !important;
+    border-color: var(--correct) !important;
+    color: var(--correct) !important;
+}
+
+.math-opt-btn.wrong {
+    background-color: rgba(var(--wrong-rgb), 0.12) !important;
+    border-color: var(--wrong) !important;
+    color: var(--wrong) !important;
+}
+
+/* Recall layouts */
+.recall-opt-btn {
+    background: #181822;
+    border: 1.5px solid var(--border-glass);
+    border-radius: 12px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recall-opt-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.recall-opt-btn.selected {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.15);
+}
+
+.recall-opt-btn.correct {
+    border-color: var(--correct) !important;
+    background-color: rgba(var(--correct-rgb), 0.12) !important;
+    color: var(--correct) !important;
+}
+
+.recall-opt-btn.wrong {
+    border-color: var(--wrong) !important;
+    background-color: rgba(var(--wrong-rgb), 0.12) !important;
+    color: var(--wrong) !important;
+}
+
+/* Responsive Overrides for iPhone / Mobile viewport compatibility */
+@media (max-width: 768px) {
+    .briefing-content {
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+        padding: 15px !important;
+        max-height: 320px !important;
+    }
+    
+    #shortmemory-math-equation {
+        font-size: 32px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .math-opt-btn {
+        font-size: 18px !important;
+        padding: 12px !important;
+    }
+    
+    .recall-opt-btn {
+        padding: 12px 15px !important;
+        font-size: 14px !important;
+    }
+    
+    .recall-opt-btn .opt-indicator {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 12px !important;
+    }
+    
+    #shortmemory-stage .game-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #shortmemory-stage .game-stats {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+}
+
+
 
 
 
